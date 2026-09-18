@@ -8,7 +8,7 @@
 
 | ลำดับ | รหัสนักศึกษา | ชื่อ-นามสกุล | บทบาทหน้าที่ |
 | :---: | :---: | :--- | :--- |
-| 1 | **673380422-8** | ยุทธนา เหล่าวิสัย | Project Manager / Full-Stack Developer |
+| 1 | **673380422-8** | ยุทธนา เหล่าวิสัย | Project Manager / Full-Stack Developer (โม้)|
 | 2 | **673380581-8** | ณัฏฐชัย ผลดี | Frontend Developer (UI/UX) |
 | 3 | **673380577-9** | จีรภัทร แก้วดี | Backend Developer (API & Logic) |
 | 4 | **673380572-9** | กฤติธี ศรีใสย์ | Database Administrator (DBA) |
