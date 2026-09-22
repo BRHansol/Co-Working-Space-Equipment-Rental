@@ -1,11 +1,14 @@
 package com.example.roombooking.service.impl;
-import com.example.roombooking.common.PageResponse;
-import  com.example.roombooking.domain.entity.User;
+import org.springframework.stereotype.Service;
+
+import  com.example.roombooking.common.PageResponse;
+import com.example.roombooking.domain.entity.User;
 import com.example.roombooking.repository.UserRepository;
 import com.example.roombooking.service.UserService;
 
 
 // รอเพิ่ม transactional annotation 
+@Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -20,7 +23,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override 
-    public User getUserByUsername(String username) {
+    public User getUserByUserName(String username) {
         return userRepository.findByUsername(username).orElse(null);
     }
 

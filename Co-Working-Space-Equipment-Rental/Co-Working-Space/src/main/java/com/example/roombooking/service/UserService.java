@@ -4,7 +4,7 @@ import com.example.roombooking.domain.entity.User;
 
 public interface UserService {
     User getUserById(Long id);
-    User getUserByUsername(String username);
+    User getUserByUserName(String username);
     User createUser(User user);
     PageResponse<User> getAllUsers(int page, int size);
     boolean exitsById(Long id);
