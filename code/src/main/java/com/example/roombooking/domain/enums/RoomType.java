@@ -1,5 +1,6 @@
 package com.example.roombooking.domain.enums;
 
-public class RoomType {
-
+public enum RoomType {
+    STANDARD,
+    VIP
 }
