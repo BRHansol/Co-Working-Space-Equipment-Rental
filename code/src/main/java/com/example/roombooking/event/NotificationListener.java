@@ -2,37 +2,38 @@ package com.example.roombooking.event;
 
 import com.example.roombooking.domain.entity.BookingStatusHistory;
 import com.example.roombooking.repository.BookingStatusHistoryRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-@Slf4j
 @Component
-@RequiredArgsConstructor
 public class NotificationListener {
 
+    // 1. ประกาศ Logger ด้วยตัวเอง
+    private static final Logger log = LoggerFactory.getLogger(NotificationListener.class);
+
     private final BookingStatusHistoryRepository historyRepository;
-    
+
+    // 2. สร้าง Constructor เองเพื่อ Inject dependency
+    public NotificationListener(BookingStatusHistoryRepository historyRepository) {
+        this.historyRepository = historyRepository;
+    }
 
     @EventListener
-    @Async 
+    @Async
     public void handleBookingStatusChange(BookingStatusChangedEvent event) {
         log.info("Booking {} status changed from {} to {}", 
                  event.getBooking().getId(), event.getOldStatus(), event.getNewStatus());
 
-        // 1. บันทึก History ลง DB
-        BookingStatusHistory history = BookingStatusHistory.builder()
-                .booking(event.getBooking())
-                .oldStatus(event.getOldStatus())
-                .newStatus(event.getNewStatus())
-                .changedBy(event.getChangedBy())
-                .build();
+        // 3. ใช้ new แล้ว Set ค่าแทนการใช้ .builder()
+        BookingStatusHistory history = new BookingStatusHistory();
+        history.setBooking(event.getBooking());
+        history.setOldStatus(event.getOldStatus());
+        history.setNewStatus(event.getNewStatus());
+        history.setChangedBy(event.getChangedBy());
         
         historyRepository.save(history);
-
-        // 2. เรียกใช้ Notification Service (เช่น ส่ง Email หา user ว่าการจองอนุมัติแล้ว)
-        // notificationService.sendBookingStatusEmail(event.getBooking(), event.getNewStatus());
     }
 }

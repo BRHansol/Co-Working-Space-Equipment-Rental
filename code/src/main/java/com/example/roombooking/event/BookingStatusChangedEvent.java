@@ -3,10 +3,8 @@ package com.example.roombooking.event;
 import com.example.roombooking.domain.entity.Booking;
 import com.example.roombooking.domain.entity.User;
 import com.example.roombooking.domain.enums.BookingStatus;
-import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
-@Getter
 public class BookingStatusChangedEvent extends ApplicationEvent {
     
     private final Booking booking;
@@ -20,5 +18,22 @@ public class BookingStatusChangedEvent extends ApplicationEvent {
         this.oldStatus = oldStatus;
         this.newStatus = newStatus;
         this.changedBy = changedBy;
+    }
+
+    // --- Getters ---
+    public Booking getBooking() {
+        return booking;
+    }
+
+    public BookingStatus getOldStatus() {
+        return oldStatus;
+    }
+
+    public BookingStatus getNewStatus() {
+        return newStatus;
+    }
+
+    public User getChangedBy() {
+        return changedBy;
     }
 }
