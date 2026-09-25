@@ -9,12 +9,10 @@ import com.example.roombooking.exception.ResourceNotFoundException;
 import com.example.roombooking.exception.RoomNotAvailableException;
 import com.example.roombooking.repository.MeetingRoomRepository;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 @Order(2)
 public class RoomAvailabilityHandler extends BookingValidationHandler{
     private final MeetingRoomRepository meetingRoomRepository;
