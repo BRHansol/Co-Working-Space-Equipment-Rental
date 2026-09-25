@@ -11,7 +11,6 @@ public class BookingValidationHandler {
     private final BookingCreateRequest request;
     private final User requester;
  
-    // ค่าที่ resolve ระหว่างทาง (populate โดย handler ที่เกี่ยวข้อง)
     private MeetingRoom room;
     private final Map<Long, Integer> requestedEquipmentQuantities = new HashMap<>();
  
