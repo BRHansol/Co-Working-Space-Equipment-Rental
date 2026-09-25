@@ -1,6 +1,6 @@
 package com.example.roombooking.service.validation;
 
-public class EquipmentAvailabilityHandler {
+public class EquipmentAvailabilityHandler extends BookingValidationHandler {
     private BookingValidationHandler next;
 
     public BookingValidationHandler setNext(BookingValidationHandler next) {
@@ -8,12 +8,15 @@ public class EquipmentAvailabilityHandler {
         return next;
     }
 
-    public final void handle(BookingValidationContext context) {
+    public final void handleChain(BookingValidationContext context) {
         doValidate(context);
         if (next != null) {
             next.handle(context);
         }
     }
 
-    protected abstract void doValidate(BookingValidationContext context);
+    @Override
+    protected void doValidate(BookingValidationContext context) {
+        // no-op placeholder for now
+    }
 }
