@@ -1,5 +1,9 @@
 package com.example.roombooking.dto.request;
 
-public class BookingCreateRequest {
+import lombok.Data;
 
+@Data
+public class BookingCreateRequest {
+    private Long roomId;
+    private Long bookingForUserId;
 }

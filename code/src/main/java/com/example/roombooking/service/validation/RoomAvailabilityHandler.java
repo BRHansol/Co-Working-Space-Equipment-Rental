@@ -16,21 +16,22 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 @Order(2)
-public class RoomAvailabilityHandler extends BookingValidationHandler{
+public class RoomAvailabilityHandler extends BookingValidationHandler {
     private final MeetingRoomRepository meetingRoomRepository;
 
     @Override
     protected void doValidate(BookingValidationContext context) {
         Long roomId = context.getRequest().getRoomId();
         log.debug("[Validation] ตรวจสอบสถานะห้อง roomId={}", roomId);
- 
+
         MeetingRoom room = meetingRoomRepository.findById(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("ไม่พบห้องประชุม id=" + roomId));
- 
-        if (room.getStatus() != RoomStatus.ACTIVE) {
+
+        if (room.getStatus() != RoomStatus.AVAILABLE) {
             throw new RoomNotAvailableException(
                     "ห้อง '" + room.getName() + "' ไม่พร้อมให้บริการในขณะนี้ (สถานะ: " + room.getStatus() + ")");
         }
- 
+
         context.setRoom(room);
+    }
 }
