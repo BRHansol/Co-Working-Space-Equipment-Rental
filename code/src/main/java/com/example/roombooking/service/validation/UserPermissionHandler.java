@@ -5,7 +5,6 @@ import com.example.roombooking.domain.enums.Role;
 import com.example.roombooking.dto.request.BookingCreateRequest;
 import com.example.roombooking.exception.ForbiddenException;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;

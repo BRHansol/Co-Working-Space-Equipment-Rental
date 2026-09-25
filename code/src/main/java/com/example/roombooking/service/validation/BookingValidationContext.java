@@ -8,14 +8,20 @@ import com.example.roombooking.domain.entity.User;
 import com.example.roombooking.dto.request.BookingCreateRequest;
 
 public class BookingValidationContext {
-     private final BookingCreateRequest request;
+
+    private final BookingCreateRequest request;
     private final User requester;
- 
-    // ค่าที่ resolve ระหว่างทาง (populate โดย handler ที่เกี่ยวข้อง)
+
+    // ข้อมูลที่ Handler ระหว่างทางจะนำมาเก็บ
     private MeetingRoom room;
+
+    // เก็บจำนวนอุปกรณ์ที่ต้องการ
     private final Map<Long, Integer> requestedEquipmentQuantities = new HashMap<>();
- 
-    public BookingValidationContext(BookingCreateRequest request, User requester) {
+
+    public BookingValidationContext(
+            BookingCreateRequest request,
+            User requester) {
+
         this.request = request;
         this.requester = requester;
     }
@@ -39,5 +45,4 @@ public class BookingValidationContext {
     public Map<Long, Integer> getRequestedEquipmentQuantities() {
         return requestedEquipmentQuantities;
     }
-    
 }

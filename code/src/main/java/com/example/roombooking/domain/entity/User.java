@@ -2,8 +2,11 @@ package com.example.roombooking.domain.entity;
 
 import java.time.LocalDate;
 
+import com.example.roombooking.domain.enums.Role;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -19,16 +22,20 @@ public class User {
     private String username;
     private String email;
     private String password;
-    private String role;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    private Boolean active = true;
     private LocalDate created_at;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private UserProfile profile;
 
-    protected User() {
+    public User() {
     }
 
-    public User(Long id, String username, String email, String password, String role, LocalDate created_at) {
+    public User(Long id, String username, String email, String password, Role role, LocalDate created_at) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -69,12 +76,24 @@ public class User {
         this.password = password;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return this.role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
+    }
+
+    public void setRole(String role) {
+        this.role = Role.valueOf(role.toUpperCase());
+    }
+
+    public Boolean getActive() {
+        return this.active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 
     public LocalDate getCreated_at() {

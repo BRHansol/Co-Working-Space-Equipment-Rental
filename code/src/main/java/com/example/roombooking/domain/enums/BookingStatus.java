@@ -1,5 +1,9 @@
 package com.example.roombooking.domain.enums;
 
-public class BookingStatus {
-
+public enum BookingStatus {
+    PENDING,
+    APPROVED,
+    REJECTED,
+    CANCELLED,
+    COMPLETED
 }
