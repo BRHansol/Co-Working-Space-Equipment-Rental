@@ -1,6 +1,9 @@
 package com.example.roombooking.service.impl;
 
 import com.example.roombooking.domain.entity.Equipment;
+import com.example.roombooking.dto.request.EquipmentCreateRequest;
+import com.example.roombooking.dto.response.EquipmentResponse;
+import com.example.roombooking.mapper.EquipmentMapper;
 import com.example.roombooking.repository.EquipmentRepository;
 import com.example.roombooking.service.EquipmentService;
 import org.springframework.data.domain.Page;
@@ -12,51 +15,60 @@ import org.springframework.transaction.annotation.Transactional;
 public class EquipmentServiceImpl implements EquipmentService {
 
     private final EquipmentRepository equipmentRepository;
+    private final EquipmentMapper equipmentMapper;
 
-    public EquipmentServiceImpl(EquipmentRepository equipmentRepository) {
+    public EquipmentServiceImpl(EquipmentRepository equipmentRepository, EquipmentMapper equipmentMapper) {
         this.equipmentRepository = equipmentRepository;
+        this.equipmentMapper = equipmentMapper;
     }
 
     @Override
     @Transactional
-    public Equipment createEquipment(Equipment equipment) {
-        if (equipment.getTotalQuantity() != null && equipment.getTotalQuantity() < 0) {
+    public EquipmentResponse createEquipment(EquipmentCreateRequest request) {
+        if (request.getTotalQuantity() != null && request.getTotalQuantity() < 0) {
             throw new IllegalArgumentException("Total quantity cannot be negative");
         }
-        return equipmentRepository.save(equipment);
+        Equipment equipment = equipmentMapper.toEntity(request);
+        Equipment savedEquipment = equipmentRepository.save(equipment);
+        return equipmentMapper.toResponse(savedEquipment);
     }
 
     @Override
-    public Equipment getEquipmentById(Long id) {
-        return equipmentRepository.findById(id)
+    public EquipmentResponse getEquipmentById(Long id) {
+        Equipment equipment = equipmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Equipment not found with id: " + id));
+        return equipmentMapper.toResponse(equipment);
     }
 
     @Override
-    public Page<Equipment> getAllEquipments(Pageable pageable) {
-        return equipmentRepository.findAll(pageable);
+    public Page<EquipmentResponse> getAllEquipments(Pageable pageable) {
+        return equipmentRepository.findAll(pageable)
+                .map(equipmentMapper::toResponse);
     }
 
     @Override
     @Transactional
-    public Equipment updateEquipment(Long id, Equipment equipmentDetails) {
-        Equipment existingEquipment = getEquipmentById(id);
+    public EquipmentResponse updateEquipment(Long id, EquipmentCreateRequest request) {
+        Equipment existingEquipment = equipmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Equipment not found with id: " + id));
 
-        if (equipmentDetails.getTotalQuantity() != null && equipmentDetails.getTotalQuantity() < 0) {
+        if (request.getTotalQuantity() != null && request.getTotalQuantity() < 0) {
             throw new IllegalArgumentException("Total quantity cannot be negative");
         }
 
-        existingEquipment.setName(equipmentDetails.getName());
-        existingEquipment.setTotalQuantity(equipmentDetails.getTotalQuantity());
-        existingEquipment.setCategory(equipmentDetails.getCategory());
+        existingEquipment.setName(request.getName());
+        existingEquipment.setTotalQuantity(request.getTotalQuantity());
+        existingEquipment.setCategory(request.getCategory());
 
-        return equipmentRepository.save(existingEquipment);
+        Equipment updatedEquipment = equipmentRepository.save(existingEquipment);
+        return equipmentMapper.toResponse(updatedEquipment);
     }
 
     @Override
     @Transactional
     public void deleteEquipment(Long id) {
-        Equipment existingEquipment = getEquipmentById(id);
+        Equipment existingEquipment = equipmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Equipment not found with id: " + id));
         equipmentRepository.delete(existingEquipment);
     }
 }
