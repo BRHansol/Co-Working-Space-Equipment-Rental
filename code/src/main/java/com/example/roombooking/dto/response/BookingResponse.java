@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.example.roombooking.domain.enums.BookingStatus;
+import lombok.Builder;
 
+@Builder
 public class BookingResponse {
      private Long id;
  
@@ -128,9 +130,34 @@ public class BookingResponse {
  
     private LocalDateTime createdAt;
 
+    @Builder
     public static class EquipmentItem {
         private Long equipmentId;
         private String equipmentName;
         private Integer quantity;
+        public EquipmentItem(Long equipmentId, String equipmentName, Integer quantity) {
+            this.equipmentId = equipmentId;
+            this.equipmentName = equipmentName;
+            this.quantity = quantity;
+        }
+        public Long getEquipmentId() {
+            return equipmentId;
+        }
+        public void setEquipmentId(Long equipmentId) {
+            this.equipmentId = equipmentId;
+        }
+        public String getEquipmentName() {
+            return equipmentName;
+        }
+        public void setEquipmentName(String equipmentName) {
+            this.equipmentName = equipmentName;
+        }
+        public Integer getQuantity() {
+            return quantity;
+        }
+        public void setQuantity(Integer quantity) {
+            this.quantity = quantity;
+        }
+        
     }
 }
