@@ -5,11 +5,6 @@ import java.util.List;
 
 import com.example.roombooking.domain.enums.BookingStatus;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-
-
 public class BookingResponse {
      private Long id;
  
