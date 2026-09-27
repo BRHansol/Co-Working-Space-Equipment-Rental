@@ -9,15 +9,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(
-        name = "bookings",
-        indexes = {
-                @Index(name = "idx_booking_room_time", columnList = "room_id, start_time, end_time"),
-                @Index(name = "idx_booking_user", columnList = "user_id")
-        }
-)
+@Table(name = "bookings", indexes = {
+        @Index(name = "idx_booking_room_time", columnList = "room_id, start_time, end_time"),
+        @Index(name = "idx_booking_user", columnList = "user_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -50,6 +49,10 @@ public class Booking {
 
     @Column(name = "purpose")
     private String purpose;
+
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<BookingEquipment> bookingEquipments = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
