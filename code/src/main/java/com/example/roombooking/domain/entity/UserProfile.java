@@ -20,7 +20,7 @@ public class UserProfile {
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, unique = true)
     private User user;
 
-    protected UserProfile() {
+    public UserProfile() {
     }
 
     public UserProfile(Long id, String fullName, String phone, String department, User user) {
