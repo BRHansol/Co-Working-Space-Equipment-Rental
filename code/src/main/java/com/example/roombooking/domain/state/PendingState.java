@@ -20,11 +20,6 @@ public class PendingState implements BookingState {
     }
 
     @Override
-    public void complete(BookingContext context) {
-        throw new IllegalStateException("Cannot complete a booking that has not been approved yet.");
-    }
-
-    @Override
     public BookingStatus getStatus() {
         return BookingStatus.PENDING;
     }
