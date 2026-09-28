@@ -1,5 +1,11 @@
 package com.example.roombooking.domain.state;
 
-public class RejectedState {
+import com.example.roombooking.domain.enums.BookingStatus;
 
+public class RejectedState implements BookingState {
+
+    @Override
+    public BookingStatus getStatus() {
+        return BookingStatus.REJECTED;
+    }
 }
