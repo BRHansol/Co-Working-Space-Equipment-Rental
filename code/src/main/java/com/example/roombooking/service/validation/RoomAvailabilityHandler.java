@@ -8,7 +8,6 @@ import com.example.roombooking.domain.enums.RoomStatus;
 import com.example.roombooking.exception.ResourceNotFoundException;
 import com.example.roombooking.exception.RoomNotAvailableException;
 import com.example.roombooking.repository.MeetingRoomRepository;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
