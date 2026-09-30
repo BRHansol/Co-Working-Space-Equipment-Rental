@@ -1,14 +1,14 @@
 package com.example.roombooking.service;
 
-import com.example.roombooking.domain.entity.Equipment;
+import com.example.roombooking.dto.request.EquipmentCreateRequest;
+import com.example.roombooking.dto.response.EquipmentResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface EquipmentService {
-    Equipment createEquipment(Equipment equipment);
-    Equipment getEquipmentById(Long id);
-    Page<Equipment> getAllEquipments(Pageable pageable);
-    Equipment updateEquipment(Long id, Equipment equipmentDetails);
-
+    EquipmentResponse createEquipment(EquipmentCreateRequest request);
+    EquipmentResponse getEquipmentById(Long id);
+    Page<EquipmentResponse> getAllEquipments(Pageable pageable);
+    EquipmentResponse updateEquipment(Long id, EquipmentCreateRequest request);
     void deleteEquipment(Long id);
 }
