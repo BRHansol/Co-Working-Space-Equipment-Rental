@@ -29,6 +29,10 @@ public class BookingContext {
         state.complete(this);
     }
 
+    public boolean isEditable() {
+        return state.isEditable();
+    }
+
     // Called by concrete states after a valid transition; syncs back to the entity.
     void setState(BookingState newState) {
         this.state = newState;

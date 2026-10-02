@@ -16,5 +16,7 @@ public interface BookingService {
 
     Page<BookingResponse> getBookingsByUser(Long userId, Pageable pageable);
 
+    BookingResponse updateBooking(Long id, BookingCreateRequest request, Long requesterId);
+
     BookingResponse updateStatus(Long id, BookingStatus targetStatus, Long actorId);
 }
