@@ -17,6 +17,7 @@ import lombok.Setter;
 
 @Data
 public class BookingCreateRequest {
+    private Long bookingId;
     private Long roomId;
     private Long bookingForUserId;
 
@@ -25,6 +26,8 @@ public class BookingCreateRequest {
  
     @NotNull(message = "กรุณาระบุเวลาสิ้นสุด")
     private LocalDateTime endTime;
+
+    
  
     /** ตรงกับ Booking.purpose */
     private String purpose;
