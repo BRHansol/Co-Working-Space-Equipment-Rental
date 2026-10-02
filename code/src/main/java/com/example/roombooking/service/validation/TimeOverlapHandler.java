@@ -12,9 +12,11 @@ import com.example.roombooking.exception.RoomNotAvailableException;
 import com.example.roombooking.repository.BookingRepository;
 
 import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 @Order(3)
 public class TimeOverlapHandler extends BookingValidationHandler{
     private static final List<BookingStatus> ACTIVE_STATUSES =
