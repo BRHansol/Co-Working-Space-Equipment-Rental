@@ -20,6 +20,11 @@ public class PendingState implements BookingState {
     }
 
     @Override
+    public boolean isEditable() {
+        return true;
+    }
+
+    @Override
     public BookingStatus getStatus() {
         return BookingStatus.PENDING;
     }
