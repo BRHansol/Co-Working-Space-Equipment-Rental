@@ -3,6 +3,7 @@ package com.example.roombooking.controller.api;
 import com.example.roombooking.dto.request.RoomCreateRequest;
 import com.example.roombooking.dto.response.RoomResponse;
 import com.example.roombooking.service.RoomService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -10,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/rooms")
+@RequestMapping("/api/v1/rooms")
 public class RoomController {
 
     private final RoomService roomService;
@@ -20,7 +21,7 @@ public class RoomController {
     }
 
     @PostMapping
-    public ResponseEntity<RoomResponse> createRoom(@RequestBody RoomCreateRequest request) {
+    public ResponseEntity<RoomResponse> createRoom(@Valid @RequestBody RoomCreateRequest request) {
         return new ResponseEntity<>(roomService.createRoom(request), HttpStatus.CREATED);
     }
 
@@ -35,7 +36,8 @@ public class RoomController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<RoomResponse> updateRoom(@PathVariable Long id, @RequestBody RoomCreateRequest request) {
+    public ResponseEntity<RoomResponse> updateRoom(@PathVariable Long id,
+                                                   @Valid @RequestBody RoomCreateRequest request) {
         return ResponseEntity.ok(roomService.updateRoom(id, request));
     }
 
