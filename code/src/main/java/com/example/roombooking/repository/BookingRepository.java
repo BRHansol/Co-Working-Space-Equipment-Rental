@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
@@ -15,10 +16,19 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     Page<Booking> findByUserId(Long userId, Pageable pageable);
 
-    boolean existsByRoomIdAndStatusNotInAndStartTimeBeforeAndEndTimeAfter(
+    // Derived query (no JPQL): existing.startTime < endTime AND existing.endTime > startTime
+    List<Booking> findByRoomIdAndStatusInAndStartTimeBeforeAndEndTimeAfter(
             Long roomId,
-            Collection<BookingStatus> excluded,
+            Collection<BookingStatus> statuses,
             LocalDateTime endTime,
             LocalDateTime startTime
     );
+
+    // Used by TimeOverlapHandler; keeps its argument order (start before end).
+    default List<Booking> findOverlappingBookings(Long roomId,
+                                                  LocalDateTime startTime,
+                                                  LocalDateTime endTime,
+                                                  Collection<BookingStatus> statuses) {
+        return findByRoomIdAndStatusInAndStartTimeBeforeAndEndTimeAfter(roomId, statuses, endTime, startTime);
+    }
 }
