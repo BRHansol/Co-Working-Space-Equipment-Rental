@@ -3,6 +3,7 @@ package com.example.roombooking.controller.api;
 import com.example.roombooking.dto.request.EquipmentCreateRequest;
 import com.example.roombooking.dto.response.EquipmentResponse;
 import com.example.roombooking.service.EquipmentService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -10,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/equipments")
+@RequestMapping("/api/v1/equipments")
 public class EquipmentController {
 
     private final EquipmentService equipmentService;
@@ -20,7 +21,7 @@ public class EquipmentController {
     }
 
     @PostMapping
-    public ResponseEntity<EquipmentResponse> createEquipment(@RequestBody EquipmentCreateRequest request) {
+    public ResponseEntity<EquipmentResponse> createEquipment(@Valid @RequestBody EquipmentCreateRequest request) {
         return new ResponseEntity<>(equipmentService.createEquipment(request), HttpStatus.CREATED);
     }
 
@@ -35,7 +36,7 @@ public class EquipmentController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EquipmentResponse> updateEquipment(@PathVariable Long id, @RequestBody EquipmentCreateRequest request) {
+    public ResponseEntity<EquipmentResponse> updateEquipment(@PathVariable Long id, @Valid @RequestBody EquipmentCreateRequest request) {
         return ResponseEntity.ok(equipmentService.updateEquipment(id, request));
     }
 
