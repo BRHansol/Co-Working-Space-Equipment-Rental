@@ -45,20 +45,20 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request, null);
     }
 
-    // 409 - ทำรายการไม่ได้เพราะข้อมูลขัดกัน (เช่นลบห้อง/อุปกรณ์ที่มีการจองอยู่)
-    @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex,
-                                                        HttpServletRequest request) {
-        log.warn("Conflict: {}", ex.getMessage());
-        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request, null);
-    }
-
     // 403 - ผู้ใช้ไม่มีสิทธิ์ทำรายการนี้ (เช่นไม่ใช่เจ้าของ booking / ไม่ใช่ admin)
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException ex,
                                                           HttpServletRequest request) {
         log.warn("Forbidden: {}", ex.getMessage());
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request, null);
+    }
+
+    // 409 - พยายามเปลี่ยนสถานะ booking แบบที่ state machine ไม่อนุญาต (เช่น แก้ booking ที่ถูก approve ไปแล้ว)
+    @ExceptionHandler(InvalidStateTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidStateTransition(InvalidStateTransitionException ex,
+                                                                       HttpServletRequest request) {
+        log.warn("Invalid state transition: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request, null);
     }
 
     // 400 - request body ไม่ผ่าน @Valid (เช่น field required ใน DTO)
