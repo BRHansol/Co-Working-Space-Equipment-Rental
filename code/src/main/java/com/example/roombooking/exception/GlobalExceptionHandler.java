@@ -53,6 +53,14 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request, null);
     }
 
+    // 409 - พยายามเปลี่ยนสถานะ booking แบบที่ state machine ไม่อนุญาต (เช่น แก้ booking ที่ถูก approve ไปแล้ว)
+    @ExceptionHandler(InvalidStateTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidStateTransition(InvalidStateTransitionException ex,
+                                                                       HttpServletRequest request) {
+        log.warn("Invalid state transition: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request, null);
+    }
+
     // 400 - request body ไม่ผ่าน @Valid (เช่น field required ใน DTO)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex,

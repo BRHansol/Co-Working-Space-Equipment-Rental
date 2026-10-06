@@ -7,11 +7,13 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 public interface BookingEquipmentRepository extends JpaRepository<BookingEquipment, Long> {
 
     /**
-     * รวมจำนวนอุปกรณ์ชิ้นนี้ (equipmentId) ที่ถูกจองไปแล้วในการจองที่ "ยังมีผลอยู่"
+     * หาจำนวนอุปกรณ์ชิ้นนี้ (equipmentId) ที่ถูกจองพร้อมกันสูงสุดในการจองที่ "ยังมีผลอยู่"
      * (สถานะ PENDING หรือ APPROVED เท่านั้น — CANCELLED/REJECTED/COMPLETED ไม่นับ)
      * และช่วงเวลาทับซ้อนกับ [startTime, endTime) ที่ขอมา
      *
@@ -20,11 +22,37 @@ public interface BookingEquipmentRepository extends JpaRepository<BookingEquipme
      *
      * @param excludeBookingId ใช้ตัดการจองตัวเองออกตอนแก้ไขการจองเดิม ส่ง null
      *                         ได้ตอนสร้างใหม่
-     * @return ผลรวมจำนวนที่จองไว้แล้ว (0 ถ้าไม่มีรายการใดตรงเงื่อนไข ไม่คืน null
-     *         เพราะใช้ COALESCE)
+     * @return จำนวนที่จองพร้อมกันสูงสุดในช่วงที่ขอ (0 ถ้าไม่มีรายการ ไม่คืน null)
      */
+    default Long sumReservedQuantity(Long equipmentId,
+                                     LocalDateTime startTime,
+                                     LocalDateTime endTime,
+                                     Long excludeBookingId) {
+        Map<LocalDateTime, Long> quantityChanges = new TreeMap<>();
+        for (ReservationWindow reservation : findOverlappingReservations(
+                equipmentId, startTime, endTime, excludeBookingId)) {
+            LocalDateTime start = reservation.getStartTime().isBefore(startTime)
+                    ? startTime : reservation.getStartTime();
+            LocalDateTime end = reservation.getEndTime().isAfter(endTime)
+                    ? endTime : reservation.getEndTime();
+            long quantity = reservation.getQuantity().longValue();
+
+            // รวมการคืนและการยืมที่เวลาเดียวกันก่อนนับ เพื่อให้ช่วงเวลาเป็น [start, end)
+            quantityChanges.merge(start, quantity, Long::sum);
+            quantityChanges.merge(end, -quantity, Long::sum);
+        }
+
+        long reserved = 0;
+        long peakReserved = 0;
+        for (long change : quantityChanges.values()) {
+            reserved += change;
+            peakReserved = Math.max(peakReserved, reserved);
+        }
+        return peakReserved;
+    }
+
     @Query("""
-            SELECT COALESCE(SUM(be.quantity), 0)
+            SELECT b.startTime AS startTime, b.endTime AS endTime, be.quantity AS quantity
             FROM BookingEquipment be
             JOIN be.booking b
             WHERE be.equipment.id = :equipmentId
@@ -34,7 +62,7 @@ public interface BookingEquipmentRepository extends JpaRepository<BookingEquipme
               AND b.endTime > :startTime
               AND (:excludeBookingId IS NULL OR b.id <> :excludeBookingId)
             """)
-    Long sumReservedQuantity(
+    List<ReservationWindow> findOverlappingReservations(
             @Param("equipmentId") Long equipmentId,
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime,
@@ -51,4 +79,12 @@ public interface BookingEquipmentRepository extends JpaRepository<BookingEquipme
      * (ลบของเก่าทิ้งก่อนแล้วค่อยสร้างรายการใหม่ ง่ายกว่าการ diff ทีละรายการ)
      */
     void deleteByBookingId(Long bookingId);
+
+    interface ReservationWindow {
+        LocalDateTime getStartTime();
+
+        LocalDateTime getEndTime();
+
+        Integer getQuantity();
+    }
 }
