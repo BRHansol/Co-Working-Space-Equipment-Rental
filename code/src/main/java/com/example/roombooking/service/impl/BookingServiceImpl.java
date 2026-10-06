@@ -15,6 +15,7 @@ import com.example.roombooking.repository.BookingRepository;
 import com.example.roombooking.repository.EquipmentRepository;
 import com.example.roombooking.repository.UserRepository;
 import com.example.roombooking.service.BookingService;
+import com.example.roombooking.service.strategy.BookingRuleStrategyFactory;
 import com.example.roombooking.service.validation.BookingValidationChain;
 import com.example.roombooking.service.validation.BookingValidationContext;
 import org.springframework.context.ApplicationEventPublisher;
@@ -34,19 +35,22 @@ public class BookingServiceImpl implements BookingService {
     private final BookingValidationChain validationChain;
     private final BookingMapper bookingMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final BookingRuleStrategyFactory ruleStrategyFactory;
 
     public BookingServiceImpl(BookingRepository bookingRepository,
                               UserRepository userRepository,
                               EquipmentRepository equipmentRepository,
                               BookingValidationChain validationChain,
                               BookingMapper bookingMapper,
-                              ApplicationEventPublisher eventPublisher) {
+                              ApplicationEventPublisher eventPublisher,
+                              BookingRuleStrategyFactory ruleStrategyFactory) {
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
         this.equipmentRepository = equipmentRepository;
         this.validationChain = validationChain;
         this.bookingMapper = bookingMapper;
         this.eventPublisher = eventPublisher;
+        this.ruleStrategyFactory = ruleStrategyFactory;
     }
 
     // ---------- Create ----------
@@ -65,6 +69,11 @@ public class BookingServiceImpl implements BookingService {
 
         Booking booking = bookingMapper.toEntity(request, context.getRoom(), bookedFor);
         attachEquipment(booking, context);
+
+        // Strategy: STANDARD rooms are approved right away, VIP rooms stay PENDING for an admin.
+        if (!ruleStrategyFactory.getStrategy(context.getRoom().getRoomType()).requiresApproval()) {
+            new BookingContext(booking).approve();
+        }
 
         return bookingMapper.toResponse(bookingRepository.save(booking));
     }

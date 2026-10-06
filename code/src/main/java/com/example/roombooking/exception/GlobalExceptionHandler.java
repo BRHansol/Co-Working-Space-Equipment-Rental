@@ -45,6 +45,14 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request, null);
     }
 
+    // 409 - ทำรายการไม่ได้เพราะข้อมูลขัดกัน (เช่นลบห้อง/อุปกรณ์ที่มีการจองอยู่)
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex,
+                                                        HttpServletRequest request) {
+        log.warn("Conflict: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request, null);
+    }
+
     // 403 - ผู้ใช้ไม่มีสิทธิ์ทำรายการนี้ (เช่นไม่ใช่เจ้าของ booking / ไม่ใช่ admin)
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException ex,
