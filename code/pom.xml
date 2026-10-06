@@ -58,9 +58,25 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Boot 4 แยก test slice ออกเป็นโมดูล ต้องมีสองตัวนี้ถึงจะใช้ @DataJpaTest / @WebMvcTest / @AutoConfigureMockMvc ได้ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -68,11 +84,8 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>io.swagger.core.v3</groupId>
-            <artifactId>swagger-models</artifactId>
-            <version>2.2.28</version>
-        </dependency>
+        <!-- springdoc 3.x รองรับ Spring Boot 4 (2.x เรียก API ของ Spring 6 ที่ถูกลบไปแล้ว ทำให้ /v3/api-docs ตอบ 500)
+             swagger-models ถูกดึงมาพร้อม springdoc อยู่แล้ว -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
