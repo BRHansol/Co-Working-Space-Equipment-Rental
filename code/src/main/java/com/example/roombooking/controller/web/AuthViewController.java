@@ -5,6 +5,9 @@ import com.example.roombooking.controller.web.forms.RegistrationForm;
 import com.example.roombooking.controller.web.support.WebSessionSupport;
 import com.example.roombooking.domain.entity.User;
 import com.example.roombooking.domain.enums.Role;
+import com.example.roombooking.dto.request.UserCreateRequest;
+import com.example.roombooking.dto.response.UserResponse;
+import com.example.roombooking.exception.ResourceNotFoundException;
 import com.example.roombooking.repository.UserRepository;
 import com.example.roombooking.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,8 +23,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Locale;
 
@@ -113,15 +114,15 @@ public class AuthViewController {
         if (errors.hasErrors()) {
             return "auth/register";
         }
-        User user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setPassword(sessions.hashPassword(form.getPassword()));
-        user.setRole(Role.USER);
-        user.setActive(true);
-        user.setCreated_at(LocalDate.now(ZoneId.of("Asia/Bangkok")));
-        User saved = userService.createUser(user);
-        sessions.login(request, saved);
+        UserCreateRequest payload = new UserCreateRequest();
+        payload.setUsername(username);
+        payload.setEmail(email);
+        payload.setPassword(form.getPassword());
+        payload.setRole(Role.USER);
+        UserResponse saved = userService.createUser(payload);
+        User savedUser = users.findById(saved.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("ไม่พบบัญชีที่สร้างแล้ว"));
+        sessions.login(request, savedUser);
         redirect.addFlashAttribute("flashSuccess", "สร้างบัญชีแล้ว เริ่มเลือกพื้นที่ที่ต้องการได้เลย");
         return "redirect:/account";
     }

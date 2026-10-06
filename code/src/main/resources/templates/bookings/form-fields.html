@@ -12,9 +12,9 @@
       <option value="">เลือกห้อง</option>
       <option th:each="room : ${rooms}" th:value="${room.id}"
               th:disabled="${room.status.name() == 'MAINTENANCE'}"
-              th:text="${room.name + ' · ' + (room.capacity != null ? room.capacity : '–') + ' คน' + (room.floor != null ? ' · ชั้น ' + room.floor : '') + (room.status.name() == 'MAINTENANCE' ? ' · ปิดซ่อมบำรุง' : '')}"></option>
+              th:text="${room.name + ' · ' + ui.roomTypeLabel(room.roomType) + ' · ' + (room.capacity != null ? room.capacity : '–') + ' คน' + (room.floor != null ? ' · ชั้น ' + room.floor : '') + (room.status.name() == 'MAINTENANCE' ? ' · ปิดซ่อมบำรุง' : '')}"></option>
     </select>
-    <small class="muted">ความว่างของห้องจะถูกตรวจสอบอีกครั้งเมื่อส่งคำขอ</small>
+    <small class="muted">ความว่างของห้องจะถูกตรวจสอบอีกครั้งเมื่อยืนยันการจอง</small>
   </div>
   <div class="field">
     <label for="date">วันที่เริ่มต้น <span aria-hidden="true">*</span></label>
@@ -40,7 +40,7 @@
   </div>
 </div>
 <div th:fragment="equipmentFields" class="equipment-options">
-  <p class="notice">เลือกอุปกรณ์ที่ต้องการเพิ่มเติม หรือใส่ 0 เพื่อข้ามรายการ จำนวนที่ว่างในช่วงเวลาจองจะถูกตรวจสอบเมื่อส่งคำขอ</p>
+  <p class="notice">เลือกอุปกรณ์ที่ต้องการเพิ่มเติม หรือใส่ 0 เพื่อข้ามรายการ จำนวนที่ว่างในช่วงเวลาจองจะถูกตรวจสอบเมื่อบันทึกการจอง</p>
   <div class="empty-state" th:if="${equipment.isEmpty()}"><p>ยังไม่มีอุปกรณ์ในคลัง คุณสามารถจองห้องโดยไม่เพิ่มอุปกรณ์ได้</p></div>
   <div class="equipment-choice card" th:each="item : ${equipment}">
     <img class="equipment-photo" th:if="${equipmentPhotos[item.id] != ''}" th:src="${equipmentPhotos[item.id]}" alt="" loading="lazy" width="96" height="96">
@@ -60,11 +60,14 @@
   <p class="eyebrow">สรุปการจอง</p>
   <h2 th:text="${selectedRoom.name}"></h2>
   <dl class="summary-list">
+    <div><dt>ประเภทห้อง</dt><dd th:text="${ui.roomTypeLabel(selectedRoom.roomType)}"></dd></div>
     <div><dt>วันที่</dt><dd th:text="${summaryDate}"></dd></div>
     <div><dt>เวลา</dt><dd th:text="${summaryTime + ' น.'}"></dd></div>
     <div><dt>รองรับ</dt><dd th:text="${selectedRoom.capacity + ' คน'}"></dd></div>
     <div th:if="${selectedRoom.floor != null}"><dt>ชั้น</dt><dd th:text="${selectedRoom.floor}"></dd></div>
   </dl>
+  <p class="notice" th:if="${selectedRoom.roomType != null and selectedRoom.roomType.name() == 'STANDARD'}">ห้องมาตรฐานอนุมัติทันทีเมื่อสร้างการจองสำเร็จ</p>
+  <p class="notice" th:if="${selectedRoom.roomType != null and selectedRoom.roomType.name() == 'VIP'}">ห้อง VIP รอผู้ดูแลระบบอนุมัติ</p>
   <small class="muted">ภาพประกอบบรรยากาศพื้นที่ทำงาน</small>
 </aside>
 <div th:fragment="bookingFacts" class="card">
@@ -75,7 +78,7 @@
     <div><dt>วันที่</dt><dd th:text="${dateLabel}"></dd></div>
     <div><dt>เวลา</dt><dd th:text="${timeLabel + ' น.'}"></dd></div>
     <div><dt>วัตถุประสงค์</dt><dd th:text="${booking.purpose != null and !booking.purpose.isBlank() ? booking.purpose : 'ไม่ได้ระบุ'}"></dd></div>
-    <div><dt>วันที่ส่งคำขอ</dt><dd th:text="${createdDate}"></dd></div>
+    <div><dt>วันที่สร้างการจอง</dt><dd th:text="${createdDate}"></dd></div>
   </dl>
   <h3 class="section-title">อุปกรณ์เพิ่มเติม</h3>
   <p class="muted" th:if="${booking.equipmentItems.isEmpty()}">ไม่ได้เลือกอุปกรณ์เพิ่มเติม</p>

@@ -172,18 +172,19 @@ public class AdminViewController {
             if(existing.stream().anyMatch(u -> email.equalsIgnoreCase(u.getEmail()))) errors.rejectValue("email","duplicate","อีเมลนี้มีแล้ว");
             if(form.getPassword().getBytes(StandardCharsets.UTF_8).length>72) errors.rejectValue("password","length","รหัสผ่านต้องไม่เกิน 72 ไบต์");
             if(!errors.hasErrors()) {
-                User user=new User(); user.setUsername(name); user.setEmail(email); user.setPassword(sessions.hashPassword(form.getPassword())); user.setRole(form.getRole()); user.setActive(true); user.setCreated_at(LocalDate.now(ZoneId.of("Asia/Bangkok")));
-                users.createUser(user); redirect.addFlashAttribute("flashSuccess","สร้างผู้ใช้แล้ว"); return "redirect:/admin/users";
+                UserCreateRequest payload=new UserCreateRequest(); payload.setUsername(name); payload.setEmail(email);
+                payload.setPassword(form.getPassword()); payload.setRole(form.getRole());
+                users.createUser(payload); redirect.addFlashAttribute("flashSuccess","สร้างผู้ใช้แล้ว"); return "redirect:/admin/users";
             }
         }
         userModel(model); return "admin/users";
     }
     @GetMapping("/users/{id}") public String userDetail(@PathVariable Long id,HttpServletRequest request,Model model) {
-        sessions.requireAdmin(request); model.addAttribute("userDetail",users.getUserById(id));
+        sessions.requireAdmin(request); model.addAttribute("userDetail",userEntity(id));
         model.addAttribute("bookings",bookings.getBookingsByUser(id,Pageable.unpaged()).getContent()); return "admin/user-detail";
     }
     @PostMapping("/users/{id}/delete") public String deleteUser(@PathVariable Long id,HttpServletRequest request,RedirectAttributes redirect) {
-        User actor=sessions.requireAdmin(request); User target=users.getUserById(id);
+        User actor=sessions.requireAdmin(request); User target=userEntity(id);
         if(actor.getId().equals(id)) redirect.addFlashAttribute("flashError","ไม่สามารถลบบัญชีที่กำลังใช้งานอยู่ได้");
         else if(target.getRole()==Role.ADMIN && userRepository.findAll().stream().filter(u -> u.getRole()==Role.ADMIN && Boolean.TRUE.equals(u.getActive())).count()<=1)
             redirect.addFlashAttribute("flashError","ต้องมีผู้ดูแลระบบที่ใช้งานได้อย่างน้อยหนึ่งบัญชี");
@@ -199,6 +200,9 @@ public class AdminViewController {
     private void roomModel(Model model,Long editId) { model.addAttribute("rooms",allRooms()); model.addAttribute("editId",editId); }
     private void equipmentModel(Model model,Long editId) { model.addAttribute("equipmentList",allEquipment()); model.addAttribute("editId",editId); }
     private void userModel(Model model) { model.addAttribute("users",userRepository.findAll()); }
+    private User userEntity(Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("ไม่พบผู้ใช้"));
+    }
     private void bookingFormModel(Model model) {
         model.addAttribute("rooms",allRooms().stream().filter(r -> r.getStatus()==RoomStatus.AVAILABLE).toList());
         model.addAttribute("users",userRepository.findAll().stream().filter(u -> Boolean.TRUE.equals(u.getActive())).toList()); model.addAttribute("equipmentList",allEquipment());

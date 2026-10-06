@@ -5,7 +5,7 @@
 <header th:replace="~{fragments/navbar :: navbar('bookings')}"></header>
 <main id="main-content" class="page-shell">
   <a class="btn btn-text" th:href="@{/bookings/{id}(id=${booking.id})}"><span aria-hidden="true">←</span> รายละเอียดการจอง</a>
-  <div class="page-heading"><div><p class="eyebrow" th:text="${'BOOKING BK-' + #numbers.formatInteger(booking.id, 4)}"></p><h1>แก้ไขการจอง</h1><p class="muted">ปรับรายละเอียดก่อนเจ้าหน้าที่อนุมัติคำขอ</p></div><span class="status-pill status-pending">รออนุมัติ</span></div>
+  <div class="page-heading"><div><p class="eyebrow" th:text="${'BOOKING BK-' + #numbers.formatInteger(booking.id, 4)}"></p><h1>แก้ไขการจอง</h1><p class="muted">ปรับห้อง ช่วงเวลา และอุปกรณ์ของการจอง</p></div><span class="status-pill" th:classappend="${ui.statusClass(booking.status)}" th:text="${ui.statusLabel(booking.status)}"></span></div>
   <div th:replace="~{fragments/messages :: messages}"></div>
   <form method="post" th:action="@{/bookings/{id}/edit(id=${booking.id})}" th:object="${editForm}" data-submit-once>
     <input type="hidden" name="_csrf" th:value="${csrfToken}">

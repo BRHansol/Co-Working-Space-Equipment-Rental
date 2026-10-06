@@ -1,5 +1,8 @@
 package com.example.roombooking.controller.web;
 
+import com.example.roombooking.domain.enums.BookingStatus;
+import com.example.roombooking.repository.BookingRepository;
+import com.example.roombooking.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.*;
         "spring.jpa.hibernate.ddl-auto=create-drop"})
 class LocalWebsiteIntegrationTest {
     @Autowired Environment environment;
+    @Autowired BookingRepository bookingRepository;
+    @Autowired UserRepository userRepository;
     private WebClient browser() { return new WebClient("http://127.0.0.1:"+environment.getProperty("local.server.port")); }
 
     @Test void publicPagesRenderWithLocalAssetsAndErrors() throws Exception {
@@ -41,9 +46,9 @@ class LocalWebsiteIntegrationTest {
     @Test void memberBookingWizardEditCancelAndManagerApprovalWork() throws Exception {
         WebClient member=browser(); member.login("narin");
         assertEquals(200,member.get("/account").status); assertEquals(200,member.get("/bookings").status);
-        assertEquals(200,member.get("/bookings/new?roomId=1").status);
+        assertEquals(200,member.get("/bookings/new?roomId=2").status);
         String date=LocalDate.now().plusDays(14).toString();
-        Reply step1=member.post("/bookings/new/details", Map.of("roomId","1","date",date,"startTime","09:00","endTime","11:00","purpose","HTTP integration test"));
+        Reply step1=member.post("/bookings/new/details", Map.of("roomId","2","date",date,"startTime","09:00","endTime","11:00","purpose","HTTP integration test"));
         assertEquals("/bookings/new/equipment",step1.location);
         assertEquals(200,member.get(step1.location).status);
         Reply step2=member.post("/bookings/new/equipment",Map.of("quantities[1]","1","quantities[2]","0"));
@@ -52,18 +57,57 @@ class LocalWebsiteIntegrationTest {
         assertTrue(submit.location.matches("/bookings/\\d+/submitted"),submit.location);
         assertEquals(200,member.get(submit.location).status);
         String detail=submit.location.replace("/submitted","");
+        Long bookingId=Long.valueOf(detail.substring(detail.lastIndexOf('/')+1));
+        assertEquals(BookingStatus.PENDING,bookingRepository.findById(bookingId).orElseThrow().getStatus());
         assertEquals(200,member.get(detail).status); assertEquals(200,member.get(detail+"/edit").status);
-        Reply edit=member.post(detail+"/edit",Map.of("roomId","1","date",date,"startTime","10:00","endTime","12:00","purpose","Updated purpose","quantities[1]","1"));
+        Reply edit=member.post(detail+"/edit",Map.of("roomId","2","date",date,"startTime","10:00","endTime","12:00","purpose","Updated purpose","quantities[1]","1"));
         assertEquals(detail,edit.location); assertTrue(member.get(detail).html.contains("Updated purpose"));
         WebClient manager=browser(); manager.login("staff");
         String adminDetail="/admin"+detail; assertEquals(200,manager.get(adminDetail).status);
         assertEquals(adminDetail,manager.post(adminDetail+"/status",Map.of("status","APPROVED")).location);
         assertTrue(manager.get(adminDetail).html.contains("อนุมัติแล้ว"));
+        assertEquals(BookingStatus.APPROVED,bookingRepository.findById(bookingId).orElseThrow().getStatus());
         assertEquals(302,member.get(detail+"/edit").status);
         assertEquals(detail,member.post(detail+"/cancel",Map.of()).location);
         assertTrue(member.get(detail).html.contains("ยกเลิกแล้ว"));
+        assertEquals(BookingStatus.CANCELLED,bookingRepository.findById(bookingId).orElseThrow().getStatus());
         for(String path:List.of("/admin","/admin/bookings","/admin/bookings/new","/admin/rooms","/admin/equipment")) assertEquals(200,manager.get(path).status,path);
         assertEquals(403,manager.get("/admin/users").status);
+    }
+
+    @Test void standardBookingIsApprovedAutomaticallyAndEditIsUnavailable() throws Exception {
+        WebClient member=browser(); member.login("narin");
+        assertEquals(200,member.get("/bookings/new?roomId=1").status);
+        String date=LocalDate.now().plusDays(15).toString();
+        assertEquals("/bookings/new/equipment",member.post("/bookings/new/details",
+                Map.of("roomId","1","date",date,"startTime","13:00","endTime","14:00","purpose","STANDARD approval QA")).location);
+        assertEquals(200,member.get("/bookings/new/equipment").status);
+        assertEquals("/bookings/new/review",member.post("/bookings/new/equipment",Map.of()).location);
+        assertEquals(200,member.get("/bookings/new/review").status);
+        Reply submit=member.post("/bookings/new/submit",Map.of());
+        assertTrue(submit.location.matches("/bookings/\\d+/submitted"),submit.html);
+        String detail=submit.location.replace("/submitted","");
+        Long bookingId=Long.valueOf(detail.substring(detail.lastIndexOf('/')+1));
+        assertEquals(BookingStatus.APPROVED,bookingRepository.findById(bookingId).orElseThrow().getStatus());
+        assertTrue(member.get(submit.location).html.contains("อนุมัติแล้ว"));
+        assertEquals(detail,member.get(detail+"/edit").location);
+        assertEquals(detail,member.post(detail+"/cancel",Map.of()).location);
+        assertEquals(BookingStatus.CANCELLED,bookingRepository.findById(bookingId).orElseThrow().getStatus());
+    }
+
+    @Test void registrationCreatesEncodedPasswordAndSupportsLaterLogin() throws Exception {
+        WebClient newMember=browser();
+        assertEquals(200,newMember.get("/register").status);
+        Reply registration=newMember.post("/register",Map.of("username","e2e_member","email","e2e-member@example.com",
+                "password","local123","confirmPassword","local123","role","ADMIN"));
+        assertEquals("/account",registration.location);
+        assertEquals(200,newMember.get("/account").status);
+        var saved=userRepository.findByUsername("e2e_member").orElseThrow();
+        assertNotEquals("local123",saved.getPassword());
+        assertEquals(com.example.roombooking.domain.enums.Role.USER,saved.getRole());
+        assertEquals("/login?loggedOut",newMember.post("/logout",Map.of()).location);
+        WebClient laterSession=browser(); laterSession.login("e2e_member");
+        assertTrue(laterSession.get("/account").html.contains("e2e_member"));
     }
 
     @Test void adminCreatesAndEditsCatalogAndBooksOnBehalf() throws Exception {

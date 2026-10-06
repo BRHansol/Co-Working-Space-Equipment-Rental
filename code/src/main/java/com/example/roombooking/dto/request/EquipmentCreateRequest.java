@@ -1,8 +1,20 @@
 package com.example.roombooking.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
+
 public class EquipmentCreateRequest {
+    @NotBlank(message = "name is required")
+    @Size(max = 100, message = "name must be at most 100 characters")
     private String name;
+
+    @NotNull(message = "totalQuantity is required")
+    @PositiveOrZero(message = "totalQuantity cannot be negative")
     private Integer totalQuantity;
+
+    @Size(max = 50, message = "category must be at most 50 characters")
     private String category;
 
     // Getters and Setters

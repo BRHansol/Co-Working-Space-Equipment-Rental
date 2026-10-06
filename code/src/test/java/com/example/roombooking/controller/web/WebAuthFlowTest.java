@@ -5,6 +5,8 @@ import com.example.roombooking.controller.web.support.WebSessionSupport;
 import com.example.roombooking.controller.web.support.WebViewAdvice;
 import com.example.roombooking.domain.entity.User;
 import com.example.roombooking.domain.enums.Role;
+import com.example.roombooking.dto.request.UserCreateRequest;
+import com.example.roombooking.dto.response.UserResponse;
 import com.example.roombooking.repository.UserRepository;
 import com.example.roombooking.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -91,24 +93,23 @@ class WebAuthFlowTest {
     }
 
     @Test
-    void registrationAlwaysCreatesUserRoleAndHashedPassword() throws Exception {
+    void registrationPassesRawPasswordAndUserRoleToServiceAndUsesSavedEntity() throws Exception {
         when(users.findAll()).thenReturn(List.of());
-        when(userService.createUser(any())).thenAnswer(invocation -> {
-            User saved = invocation.getArgument(0);
-            saved.setId(42L);
-            return saved;
-        });
+        when(userService.createUser(any(UserCreateRequest.class))).thenReturn(UserResponse.builder().id(42L).build());
+        User saved = user(42L, "newuser", Role.USER);
+        saved.setPassword(sessions.hashPassword("local123"));
+        when(users.findById(42L)).thenReturn(Optional.of(saved));
         MockHttpSession session = anonymousSession();
         mvc.perform(post("/register").session(session).param("_csrf", "test-csrf")
                         .param("username", "newuser").param("email", "new@example.com")
                         .param("password", "local123").param("confirmPassword", "local123")
                         .param("role", "ADMIN"))
                 .andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/account"));
-        ArgumentCaptor<User> created = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<UserCreateRequest> created = ArgumentCaptor.forClass(UserCreateRequest.class);
         verify(userService).createUser(created.capture());
         assertEquals(Role.USER, created.getValue().getRole());
-        assertNotEquals("local123", created.getValue().getPassword());
-        assertTrue(sessions.matchesPassword("local123", created.getValue().getPassword()));
+        assertEquals("local123", created.getValue().getPassword());
+        verify(users).findById(42L);
         assertEquals(42L, session.getAttribute(WebSessionSupport.USER_ID_SESSION_KEY));
     }
 

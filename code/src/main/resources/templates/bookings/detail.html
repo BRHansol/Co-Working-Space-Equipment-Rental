@@ -10,7 +10,7 @@
   <div class="split-layout">
     <div>
       <div th:replace="~{bookings/form-fields :: bookingFacts}"></div>
-      <p class="notice" th:if="${editable}">คุณแก้ไขรายละเอียดได้ระหว่างที่คำขอยังรออนุมัติ</p>
+      <p class="notice" th:if="${booking.status.name() == 'PENDING'}">คำขออยู่ระหว่างรอผู้ดูแลระบบอนุมัติ คุณแก้ไขรายละเอียดได้ระหว่างที่ยังรออนุมัติ</p>
       <p class="notice" th:if="${booking.status.name() == 'APPROVED'}">การจองได้รับอนุมัติแล้ว หากไม่ต้องการใช้งาน คุณสามารถยกเลิกรายการได้</p>
       <div class="form-actions"><a class="btn btn-primary" th:if="${editable}" th:href="@{/bookings/{id}/edit(id=${booking.id})}">แก้ไขการจอง</a><a class="btn btn-secondary" th:href="@{/rooms/{id}(id=${booking.roomId})}">ดูข้อมูลห้อง</a></div>
       <details class="card" th:if="${cancellable}"><summary class="btn btn-text">ยกเลิกการจอง</summary><div class="notice"><h2>ยืนยันยกเลิกการจองนี้?</h2><p>ห้องและอุปกรณ์ที่จองไว้จะถูกคืนให้ผู้อื่นเลือกใช้งาน และรายการที่ยกเลิกแล้วจะไม่สามารถแก้ไขได้</p><form method="post" th:action="@{/bookings/{id}/cancel(id=${booking.id})}"><input type="hidden" name="_csrf" th:value="${csrfToken}"><button type="submit" class="btn btn-danger">ยืนยันยกเลิกการจอง</button></form></div></details>

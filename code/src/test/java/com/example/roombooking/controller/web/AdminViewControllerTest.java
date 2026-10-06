@@ -6,6 +6,7 @@ import com.example.roombooking.controller.web.support.WebViewAdvice;
 import com.example.roombooking.domain.entity.User;
 import com.example.roombooking.domain.enums.*;
 import com.example.roombooking.dto.request.BookingCreateRequest;
+import com.example.roombooking.dto.request.UserCreateRequest;
 import com.example.roombooking.dto.response.*;
 import com.example.roombooking.repository.UserRepository;
 import com.example.roombooking.service.*;
@@ -152,10 +153,23 @@ class AdminViewControllerTest {
 
     @Test
     void administratorCannotDeleteOwnAccount() throws Exception {
-        when(users.getUserById(1L)).thenReturn(admin);
         mvc.perform(post("/admin/users/1/delete").session(session(1L)).param("_csrf", "test-csrf"))
                 .andExpect(redirectedUrl("/admin/users")).andExpect(flash().attributeExists("flashError"));
         verify(users, never()).deleteUserById(anyLong());
+    }
+
+    @Test
+    void adminUserCreationPassesRawPasswordAndNormalizedDtoToService() throws Exception {
+        mvc.perform(post("/admin/users").session(session(1L)).param("_csrf", "test-csrf")
+                        .param("username", " newuser ").param("email", "NEW@EXAMPLE.COM")
+                        .param("password", "local123").param("role", "STAFF"))
+                .andExpect(redirectedUrl("/admin/users"));
+        ArgumentCaptor<UserCreateRequest> payload = ArgumentCaptor.forClass(UserCreateRequest.class);
+        verify(users).createUser(payload.capture());
+        assertEquals("newuser", payload.getValue().getUsername());
+        assertEquals("new@example.com", payload.getValue().getEmail());
+        assertEquals("local123", payload.getValue().getPassword());
+        assertEquals(Role.STAFF, payload.getValue().getRole());
     }
 
     @Test
