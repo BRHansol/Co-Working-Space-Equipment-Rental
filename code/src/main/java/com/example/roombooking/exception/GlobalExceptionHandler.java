@@ -17,9 +17,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.util.List;
 import java.util.stream.Collectors;
 
-// รวมจุดจัดการ Exception ทั้งหมดของ API ไว้ที่เดียว
-// ทุก endpoint จะได้ error response ที่หน้าตาเหมือนกันหมด (ตาม ErrorResponse)
-@RestControllerAdvice
+
+@RestControllerAdvice(basePackages = "com.example.roombooking.controller.api")
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
