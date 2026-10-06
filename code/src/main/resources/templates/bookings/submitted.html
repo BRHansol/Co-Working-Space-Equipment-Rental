@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="th" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('ส่งคำขอจองแล้ว')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar('bookings')}"></header>
+<main id="main-content" class="page-shell narrow-shell">
+  <section class="page-heading"><div><p class="eyebrow">YOUR NEXT CHAPTER STARTS HERE</p><h1>ส่งคำขอจองแล้ว</h1><p class="muted">ระบบบันทึกรายการของคุณเรียบร้อย คุณติดตามสถานะได้จากการจองของฉัน</p><p><strong th:text="${'BK-' + #numbers.formatInteger(booking.id, 4)}"></strong> <span class="status-pill" th:classappend="${'status-' + booking.status.name().toLowerCase()}" th:text="${statusLabels[booking.status]}"></span></p></div></section>
+  <div th:replace="~{fragments/messages :: messages}"></div>
+  <p class="notice" th:if="${booking.status.name() == 'PENDING'}">คำขออยู่ระหว่างรอเจ้าหน้าที่อนุมัติ</p>
+  <div th:replace="~{bookings/form-fields :: bookingFacts}"></div>
+  <div class="form-actions"><a class="btn btn-primary" th:href="@{/bookings/{id}(id=${booking.id})}">ดูรายละเอียดการจอง</a><a class="btn btn-secondary" th:href="@{/bookings}">การจองของฉัน</a></div>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

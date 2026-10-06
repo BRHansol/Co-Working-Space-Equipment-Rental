@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="th" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('เลือกอุปกรณ์เพิ่มเติม')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar('bookings')}"></header>
+<main id="main-content" class="page-shell">
+  <div class="page-heading"><div><p class="eyebrow">THE TOOLS TO MAKE IT HAPPEN</p><h1>เลือกอุปกรณ์เพิ่มเติม</h1><p class="muted">เติมเครื่องมือให้พร้อมสำหรับการใช้งานของคุณ</p></div></div>
+  <ol class="steps" aria-label="ขั้นตอนการจอง"><li class="step-done"><span>1</span> ห้องและเวลา</li><li class="step-active" aria-current="step"><span>2</span> อุปกรณ์เพิ่มเติม</li><li><span>3</span> ตรวจสอบและส่งคำขอ</li></ol>
+  <div th:replace="~{fragments/messages :: messages}"></div>
+  <div class="split-layout">
+    <form method="post" th:action="@{/bookings/new/equipment}" th:object="${equipmentForm}">
+      <input type="hidden" name="_csrf" th:value="${csrfToken}">
+      <div th:replace="~{bookings/form-fields :: errors}"></div>
+      <div th:replace="~{bookings/form-fields :: equipmentFields}"></div>
+      <div class="form-actions"><a class="btn btn-secondary" th:href="@{/bookings/new}">ย้อนกลับ</a><button class="btn btn-primary" type="submit">ถัดไป: ตรวจสอบคำขอ <span aria-hidden="true">→</span></button></div>
+    </form>
+    <aside th:replace="~{bookings/form-fields :: wizardSummary}"></aside>
+  </div>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

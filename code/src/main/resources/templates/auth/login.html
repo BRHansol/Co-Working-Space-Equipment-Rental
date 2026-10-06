@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="th" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('เข้าสู่ระบบ')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar('account')}"></header>
+<main class="page-shell" id="main-content">
+    <div th:replace="~{fragments/messages :: messages}"></div>
+    <div class="auth-layout">
+        <section class="card auth-form">
+            <div class="page-heading">
+                <p class="eyebrow">READY TO WORK</p>
+                <h1>เข้าสู่ระบบ</h1>
+                <p>กลับมาจัดการการจองและเลือกพื้นที่สำหรับงานของคุณ</p>
+            </div>
+            <p class="notice" th:if="${param.loggedOut != null}">ออกจากระบบแล้ว</p>
+            <form th:action="@{/login}" method="post" th:object="${loginForm}">
+                <input type="hidden" name="_csrf" th:value="${csrfToken}">
+                <input type="hidden" name="next" th:value="${next}">
+                <div class="notice notice-error" role="alert" tabindex="-1" th:if="${#fields.hasErrors('*')}">
+                    <h2>ตรวจข้อมูลอีกครั้ง</h2>
+                    <ul><li th:each="error : ${#fields.allErrors()}" th:text="${error}"></li></ul>
+                </div>
+                <div class="field">
+                    <label for="username">ชื่อผู้ใช้</label>
+                    <input id="username" type="text" th:field="*{username}" autocomplete="username" required
+                           th:attr="aria-invalid=${#fields.hasErrors('username')},aria-describedby=${#fields.hasErrors('username') ? 'username-error' : null}">
+                    <p id="username-error" class="field-error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></p>
+                </div>
+                <div class="field">
+                    <label for="password">รหัสผ่าน</label>
+                    <input id="password" type="password" name="password" autocomplete="current-password" required
+                           th:attr="aria-invalid=${#fields.hasErrors('password')},aria-describedby=${#fields.hasErrors('password') ? 'password-error' : null}">
+                    <p id="password-error" class="field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
+                </div>
+                <button class="btn btn-primary btn-block" type="submit">เข้าสู่ระบบ</button>
+            </form>
+            <p>ยังไม่มีบัญชี? <a th:href="@{/register}">สร้างบัญชี</a></p>
+        </section>
+        <aside class="summary-card card">
+            <img th:src="@{/assets/img/room-focus.png}" alt="ห้องประชุมโทนอุ่นพร้อมโต๊ะไม้และเก้าอี้สีเขียว">
+            <h2>พร้อมสำหรับวันทำงานของคุณ</h2>
+            <p>เลือกห้อง เพิ่มอุปกรณ์ และติดตามคำขอจองได้ในที่เดียว</p>
+            <div class="notice">
+                <h3>บัญชีทดลองบนเครื่องนี้</h3>
+                <p><strong>narin</strong> — ผู้ใช้งานทั่วไป<br><strong>staff</strong> — เจ้าหน้าที่<br><strong>admin</strong> — ผู้ดูแลระบบ</p>
+                <p>รหัสผ่านทดลองทุกบัญชี: <code>local123</code></p>
+                <p>บัญชีเหล่านี้สร้างเฉพาะเมื่อเริ่มใช้ฐานข้อมูล local ใหม่</p>
+            </div>
+        </aside>
+    </div>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

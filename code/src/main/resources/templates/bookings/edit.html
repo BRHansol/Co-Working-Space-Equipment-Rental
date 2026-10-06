@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="th" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('แก้ไขการจอง')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar('bookings')}"></header>
+<main id="main-content" class="page-shell">
+  <a class="btn btn-text" th:href="@{/bookings/{id}(id=${booking.id})}"><span aria-hidden="true">←</span> รายละเอียดการจอง</a>
+  <div class="page-heading"><div><p class="eyebrow" th:text="${'BOOKING BK-' + #numbers.formatInteger(booking.id, 4)}"></p><h1>แก้ไขการจอง</h1><p class="muted">ปรับรายละเอียดก่อนเจ้าหน้าที่อนุมัติคำขอ</p></div><span class="status-pill status-pending">รออนุมัติ</span></div>
+  <div th:replace="~{fragments/messages :: messages}"></div>
+  <form method="post" th:action="@{/bookings/{id}/edit(id=${booking.id})}" th:object="${editForm}" data-submit-once>
+    <input type="hidden" name="_csrf" th:value="${csrfToken}">
+    <div th:replace="~{bookings/form-fields :: errors}"></div>
+    <div class="split-layout"><section class="card"><h2 class="section-title">ห้องและเวลา</h2><p class="muted">ช่องที่มี * จำเป็นต้องกรอก · เวลาในประเทศไทย</p><div th:replace="~{bookings/form-fields :: detailsFields}"></div></section><aside class="summary-card card"><h2 class="section-title">รายการปัจจุบัน</h2><dl class="summary-list"><div><dt>ห้อง</dt><dd th:text="${booking.roomName}"></dd></div><div><dt>วันที่</dt><dd th:text="${dateLabel}"></dd></div><div><dt>เวลา</dt><dd th:text="${timeLabel + ' น.'}"></dd></div></dl><p class="notice">ระบบจะตรวจความว่างของห้องและอุปกรณ์อีกครั้งเมื่อบันทึกการเปลี่ยนแปลง</p></aside></div>
+    <section><h2 class="section-title">อุปกรณ์เพิ่มเติม</h2><div th:replace="~{bookings/form-fields :: equipmentFields}"></div></section>
+    <div class="form-actions"><a class="btn btn-secondary" th:href="@{/bookings/{id}(id=${booking.id})}">กลับโดยไม่บันทึก</a><button class="btn btn-primary" type="submit">บันทึกการเปลี่ยนแปลง</button></div>
+  </form>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>
