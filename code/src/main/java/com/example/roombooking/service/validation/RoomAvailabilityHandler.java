@@ -21,6 +21,9 @@ public class RoomAvailabilityHandler extends BookingValidationHandler {
     @Override
     protected void doValidate(BookingValidationContext context) {
         Long roomId = context.getRequest().getRoomId();
+        if (roomId == null) {
+            throw new IllegalArgumentException("กรุณาระบุห้องประชุม");
+        }
         log.debug("[Validation] ตรวจสอบสถานะห้อง roomId={}", roomId);
 
         MeetingRoom room = meetingRoomRepository.findById(roomId)
