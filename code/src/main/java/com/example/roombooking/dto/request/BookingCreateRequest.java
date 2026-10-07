@@ -6,6 +6,8 @@ import java.util.List;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -29,11 +31,12 @@ public class BookingCreateRequest {
     private LocalDateTime endTime;
 
     /** ตรงกับ Booking.purpose */
+    @Size(max = 255, message = "วัตถุประสงค์ต้องไม่เกิน 255 ตัวอักษร")
     private String purpose;
 
     /** อุปกรณ์เพิ่มเติมที่ขอจองคู่กับห้อง (เป็น null หรือ list ว่างได้ถ้าไม่ขอ) */
     @Valid
-    private List<EquipmentItemRequest> equipmentItems;
+    private List<@NotNull(message = "รายการอุปกรณ์ต้องไม่เป็น null") EquipmentItemRequest> equipmentItems;
 
     // Constructors
     public BookingCreateRequest() {

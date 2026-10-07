@@ -41,7 +41,19 @@ public class EquipmentAvailabilityHandler extends BookingValidationHandler {
         // รวมรายการอุปกรณ์ชิ้นเดียวกันที่ส่งมาซ้ำ เช่น โปรเจคเตอร์ 2 + 1 = 3
         Map<Long, Integer> requested = context.getRequestedEquipmentQuantities();
         for (EquipmentItemRequest item : items) {
-            requested.merge(item.getEquipmentId(), item.getQuantity(), Integer::sum);
+            if (item == null || item.getEquipmentId() == null) {
+                throw new IllegalArgumentException("กรุณาระบุอุปกรณ์ในแต่ละรายการ");
+            }
+            Integer quantity = item.getQuantity();
+            if (quantity == null || quantity <= 0) {
+                throw new IllegalArgumentException("จำนวนอุปกรณ์ต้องมากกว่า 0");
+            }
+            try {
+                requested.merge(item.getEquipmentId(), quantity, Math::addExact);
+            } catch (ArithmeticException ex) {
+                throw new IllegalArgumentException(
+                        "จำนวนอุปกรณ์รวมเกินขีดจำกัดที่รองรับ: id=" + item.getEquipmentId(), ex);
+            }
         }
 
         requested.forEach((equipmentId, quantity) -> {
