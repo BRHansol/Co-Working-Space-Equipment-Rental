@@ -12,6 +12,9 @@ public class BookingValidationChain {
     private final List<BookingValidationHandler> handlers;
 
     public void validate(BookingValidationContext context) {
+        if (context == null) {
+            throw new IllegalArgumentException("กรุณาระบุข้อมูลสำหรับตรวจสอบการจอง");
+        }
         for (BookingValidationHandler handler : handlers) {
             handler.handle(context);
         }

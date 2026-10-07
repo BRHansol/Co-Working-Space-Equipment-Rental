@@ -22,6 +22,12 @@ public class BookingValidationContext {
             BookingCreateRequest request,
             User requester) {
 
+        if (request == null) {
+            throw new IllegalArgumentException("กรุณาระบุข้อมูลการจอง");
+        }
+        if (requester == null) {
+            throw new IllegalArgumentException("กรุณาระบุผู้ทำรายการ");
+        }
         this.request = request;
         this.requester = requester;
     }

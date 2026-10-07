@@ -29,6 +29,8 @@
     </scm>
     <properties>
         <java.version>17</java.version>
+        <roombooking.testSourceDirectory>${project.basedir}/src/test/java</roombooking.testSourceDirectory>
+        <roombooking.testOutputDirectory>${project.build.directory}/test-classes</roombooking.testOutputDirectory>
     </properties>
     <dependencies>
         <dependency>
@@ -98,6 +100,8 @@
     </dependencies>
     
     <build>
+        <testSourceDirectory>${roombooking.testSourceDirectory}</testSourceDirectory>
+        <testOutputDirectory>${roombooking.testOutputDirectory}</testOutputDirectory>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -105,5 +109,36 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Tests owned by nuttachai_673380581-8_04 live under the repository's required test/ folder.
+             Separate output/report folders keep this profile independent of other members' tests. -->
+        <profile>
+            <id>nuttachai_673380581-8_04</id>
+            <dependencies>
+                <!-- Spring Boot 4 provides @DataJpaTest in a separate test module. -->
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-data-jpa-test</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <properties>
+                <roombooking.testSourceDirectory>${project.basedir}/../test/nuttachai_673380581-8_04/java</roombooking.testSourceDirectory>
+                <roombooking.testOutputDirectory>${project.build.directory}/nuttachai_673380581-8_04-test-classes</roombooking.testOutputDirectory>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <reportsDirectory>${project.build.directory}/nuttachai_673380581-8_04-surefire-reports</reportsDirectory>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
