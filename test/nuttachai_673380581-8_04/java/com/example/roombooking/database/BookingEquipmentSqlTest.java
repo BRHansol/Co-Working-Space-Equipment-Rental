@@ -5,7 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.jdbc.datasource.init.ScriptException;
+import org.springframework.jdbc.datasource.init.ScriptStatementFailedException;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 
 import javax.sql.DataSource;
@@ -54,7 +54,8 @@ class BookingEquipmentSqlTest {
         legacyTable(database);
         execute(database, "INSERT INTO booking_equipment (booking_id,equipment_id,quantity) VALUES (41,73," + quantity + ")");
 
-        assertThrows(ScriptException.class, () -> schema(database));
+        // A missing resource must not be mistaken for a rejected database migration.
+        assertThrows(ScriptStatementFailedException.class, () -> schema(database));
         assertEquals(1, number(database, "SELECT COUNT(*) FROM booking_equipment"));
     }
 

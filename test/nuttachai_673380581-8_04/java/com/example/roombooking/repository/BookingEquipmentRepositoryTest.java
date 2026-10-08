@@ -88,12 +88,65 @@ class BookingEquipmentRepositoryTest {
         assertEquals(1, repository.findByBookingId(first.getId()).size());
     }
 
+    @Test
+    void reservationsForAnotherEquipmentDoNotReduceThisEquipmentsAvailability() {
+        reserve(BookingStatus.APPROVED, NINE, NINE.plusHours(1), 3);
+        Equipment otherEquipment = new Equipment();
+        otherEquipment.setName("Fixture microphone");
+        otherEquipment.setTotalQuantity(20);
+        entityManager.persist(otherEquipment);
+        Booking otherBooking = booking(BookingStatus.PENDING, NINE, NINE.plusHours(1));
+        repository.saveAndFlush(new BookingEquipment(null, otherBooking, otherEquipment, 8));
+
+        assertEquals(3L, repository.sumReservedQuantity(equipment.getId(), NINE, NINE.plusHours(1), null));
+        assertEquals(8L, repository.sumReservedQuantity(otherEquipment.getId(), NINE, NINE.plusHours(1), null));
+    }
+
+    @Test
+    void peakReservedQuantityDoesNotOverflowWhenTheTotalExceedsIntegerRange() {
+        equipment.setTotalQuantity(Integer.MAX_VALUE);
+        reserve(BookingStatus.APPROVED, NINE, NINE.plusHours(1), Integer.MAX_VALUE);
+        reserve(BookingStatus.PENDING, NINE, NINE.plusHours(1), Integer.MAX_VALUE);
+
+        assertEquals(4_294_967_294L,
+                repository.sumReservedQuantity(equipment.getId(), NINE, NINE.plusHours(1), null));
+    }
+
+    @Test
+    void excludingAnExistingBookingExcludesAllOfItsEquipmentRows() {
+        Booking currentBooking = reserve(BookingStatus.APPROVED, NINE, NINE.plusHours(1), 2);
+        repository.saveAndFlush(new BookingEquipment(null, currentBooking, equipment, 3));
+        reserve(BookingStatus.PENDING, NINE, NINE.plusHours(1), 4);
+
+        assertEquals(9L, repository.sumReservedQuantity(equipment.getId(), NINE, NINE.plusHours(1), null));
+        assertEquals(4L, repository.sumReservedQuantity(
+                equipment.getId(), NINE, NINE.plusHours(1), currentBooking.getId()));
+    }
+
     @ParameterizedTest
     @ValueSource(ints = {0, -1})
     void generatedJpaSchemaRejectsNonPositiveQuantities(int quantity) {
         Booking booking = booking(BookingStatus.PENDING, NINE, NINE.plusHours(1));
         assertThrows(DataIntegrityViolationException.class,
                 () -> repository.saveAndFlush(new BookingEquipment(null, booking, equipment, quantity)));
+    }
+
+    @Test
+    void generatedJpaSchemaRejectsNullQuantity() {
+        Booking booking = booking(BookingStatus.PENDING, NINE, NINE.plusHours(1));
+
+        assertThrows(DataIntegrityViolationException.class,
+                () -> repository.saveAndFlush(new BookingEquipment(null, booking, equipment, null)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void equipmentLinksCannotBeSavedWithoutEitherParent(boolean missingBooking) {
+        Booking booking = booking(BookingStatus.PENDING, NINE, NINE.plusHours(1));
+        BookingEquipment link = new BookingEquipment(
+                null, missingBooking ? null : booking, missingBooking ? equipment : null, 1);
+
+        assertThrows(DataIntegrityViolationException.class, () -> repository.saveAndFlush(link));
     }
 
     @Test
@@ -125,6 +178,22 @@ class BookingEquipmentRepositoryTest {
         assertTrue(repository.findByBookingId(booking.getId()).isEmpty());
         assertNotNull(entityManager.find(Booking.class, booking.getId()));
         assertNotNull(entityManager.find(Equipment.class, equipment.getId()));
+    }
+
+    @Test
+    void deletingOneBookingsLinksKeepsOtherBookingsEquipmentReservations() {
+        Booking deletedBooking = reserve(BookingStatus.PENDING, NINE, NINE.plusHours(1), 2);
+        Booking remainingBooking = reserve(BookingStatus.APPROVED, NINE, NINE.plusHours(1), 3);
+
+        repository.deleteByBookingId(deletedBooking.getId());
+        repository.flush();
+        entityManager.clear();
+
+        assertTrue(repository.findByBookingId(deletedBooking.getId()).isEmpty());
+        var remainingLinks = repository.findByBookingId(remainingBooking.getId());
+        assertEquals(1, remainingLinks.size());
+        assertEquals(3, remainingLinks.get(0).getQuantity());
+        assertEquals(3L, repository.sumReservedQuantity(equipment.getId(), NINE, NINE.plusHours(1), null));
     }
 
     private Booking reserve(BookingStatus status, LocalDateTime start, LocalDateTime end, int quantity) {
