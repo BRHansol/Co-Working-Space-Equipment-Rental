@@ -5,14 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import static org.springframework.transaction.event.TransactionPhase.AFTER_COMMIT;
-
-// ใช้ @TransactionalEventListener(AFTER_COMMIT) แทน @EventListener ธรรมดา
-// เพราะ event ถูกยิงจากกลาง @Transactional ของ BookingServiceImpl.updateStatus()
-// ถ้าใช้ @EventListener เฉยๆ + @Async อาจรันคนละ thread ก่อน transaction commit จริง
-// ทำให้ไปอ่าน booking ที่ยังไม่ commit ได้ หรือถ้า transaction rollback ก็ไม่ควรแจ้งเตือนเลย
+// Observer: ฟัง BookingStatusChangedEvent แล้วส่งต่อให้ NotificationService
+// (บันทึก history + แจ้งเตือน) โดย BookingService ไม่ต้องรู้จัก listener ตัวนี้เลย
 @Component
 public class NotificationListener {
 
@@ -24,8 +21,11 @@ public class NotificationListener {
         this.notificationService = notificationService;
     }
 
-    @TransactionalEventListener(phase = AFTER_COMMIT)
+    // AFTER_COMMIT: ทำงานหลังการเปลี่ยนสถานะ commit ลง DB แล้วเท่านั้น
+    // ถ้า transaction ของ booking rollback จะไม่มี history/แจ้งเตือนหลุดออกไป
+    // fallbackExecution: ถ้า publish นอก transaction ก็ยังทำงาน
     @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void handleBookingStatusChange(BookingStatusChangedEvent event) {
         log.info("Booking {} status changed from {} to {}",
                  event.getBooking().getId(), event.getOldStatus(), event.getNewStatus());
