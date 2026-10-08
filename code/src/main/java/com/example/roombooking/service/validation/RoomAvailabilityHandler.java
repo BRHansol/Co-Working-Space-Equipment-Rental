@@ -1,5 +1,8 @@
 package com.example.roombooking.service.validation;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -8,15 +11,17 @@ import com.example.roombooking.domain.enums.RoomStatus;
 import com.example.roombooking.exception.ResourceNotFoundException;
 import com.example.roombooking.exception.RoomNotAvailableException;
 import com.example.roombooking.repository.MeetingRoomRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Component
-@RequiredArgsConstructor
 @Order(2)
 public class RoomAvailabilityHandler extends BookingValidationHandler {
+    private static final Logger log = LoggerFactory.getLogger(RoomAvailabilityHandler.class);
     private final MeetingRoomRepository meetingRoomRepository;
+
+    @Autowired
+    public RoomAvailabilityHandler(MeetingRoomRepository meetingRoomRepository) {
+        this.meetingRoomRepository = meetingRoomRepository;
+    }
 
     @Override
     protected void doValidate(BookingValidationContext context) {
