@@ -7,7 +7,9 @@ COPY pom.xml .
 RUN mvn -B dependency:go-offline
 
 COPY src ./src
-RUN mvn -B clean package -DskipTests
+# -Dmaven.test.skip=true ข้ามทั้งการคอมไพล์และรัน test (-DskipTests ยังคอมไพล์ test อยู่
+# ถ้า test ตัวไหนคอมไพล์ไม่ผ่าน image จะ build ไม่ได้) test ให้รันแยกด้วย mvn test ก่อน deploy
+RUN mvn -B clean package -Dmaven.test.skip=true
 
 # ---------- run stage ----------
 FROM eclipse-temurin:17-jre-alpine
