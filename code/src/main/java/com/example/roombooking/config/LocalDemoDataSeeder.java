@@ -20,7 +20,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 
 @Component
-@Profile("local")
+@Profile("local & !postgres")
 public class LocalDemoDataSeeder implements ApplicationRunner {
     private final UserRepository users;
     private final MeetingRoomRepository rooms;

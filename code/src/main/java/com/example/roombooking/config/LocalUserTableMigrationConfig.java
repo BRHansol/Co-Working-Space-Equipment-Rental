@@ -19,7 +19,7 @@ import java.util.List;
 
 /** Preserve existing local accounts when the User entity's table changes to users. */
 @Configuration
-@Profile("local")
+@Profile("local & !postgres")
 public class LocalUserTableMigrationConfig {
     private static final String MIGRATION_BEAN = "localUserTableMigration";
     private static final Logger log = LoggerFactory.getLogger(LocalUserTableMigrationConfig.class);

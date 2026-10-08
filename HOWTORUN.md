@@ -1,6 +1,6 @@
 # วิธีรัน Co-Working-Space-Equipment-Rental
 
-คู่มือสำหรับสมาชิกทีมที่ต้องการเปิดเว็บ Thymeleaf บนเครื่องของตนเอง โดยใช้ Spring Boot และโปรไฟล์ `local` ซึ่งมีฐานข้อมูล H2 พร้อมข้อมูลทดลองให้แล้ว
+คู่มือสำหรับสมาชิกทีมที่ต้องการเปิดเว็บ Thymeleaf บนเครื่องของตนเอง โดยใช้ Spring Boot เลือกโปรไฟล์ `local` สำหรับ H2 พร้อมข้อมูลทดลอง หรือ `local-postgres` สำหรับ PostgreSQL จริงตามหัวข้อ 6.1
 
 ## 1. เตรียมเครื่อง
 
@@ -108,6 +108,49 @@ code/.local-data/room-booking.mv.db
 - เมื่ออัปเดตจากเว็บรุ่นเดิม ระบบจะเปลี่ยนชื่อตาราง H2 `user` เป็น `users` ก่อน Hibernate เริ่มทำงาน โดยรักษาบัญชี รหัสผ่าน และการจองเดิมไว้
 
 หากต้องการเริ่มชุดข้อมูลทดลองใหม่ ให้หยุดเซิร์ฟเวอร์ แล้วย้ายโฟลเดอร์ `code/.local-data` ไปเก็บสำรอง **นอกโปรเจกต์** จากนั้นรันเว็บใหม่ ระบบจะสร้างฐานข้อมูลและข้อมูลทดลองชุดใหม่ ข้อมูลเดิมจะอยู่ในโฟลเดอร์ที่สำรองไว้ แต่ไม่ปรากฏในฐานข้อมูลใหม่
+
+### 6.1 ใช้ PostgreSQL ในเครื่อง
+
+ติดตั้งและเปิด PostgreSQL แล้วสร้างฐานข้อมูล `room_booking` ที่ `127.0.0.1:5432` ก่อน โปรไฟล์ `local-postgres` รวม `local` กับ `postgres` เพื่อใช้หน้าเว็บ ระบบ session และสิทธิ์เดิม พร้อมเปลี่ยน datasource เป็น PostgreSQL
+
+จากโฟลเดอร์ `code` ใน **PowerShell** ตั้งค่าการเชื่อมต่อ โดยอ่านรหัสผ่านแบบไม่แสดงบนหน้าจอและไม่บันทึกค่ารหัสผ่านจริงลงไฟล์:
+
+```powershell
+$env:DB_URL = 'jdbc:postgresql://127.0.0.1:5432/room_booking'
+$env:DB_USERNAME = 'postgres'
+$postgresPassword = Read-Host 'PostgreSQL password' -AsSecureString
+$env:DB_PASSWORD = [System.Net.NetworkCredential]::new('', $postgresPassword).Password
+Remove-Variable postgresPassword
+```
+
+**ครั้งแรกที่ฐานข้อมูลยังไม่มีตาราง** ให้สร้างโครงสร้างจาก Entity ด้วยคำสั่งนี้ แล้วรอจนแอปเริ่มสำเร็จ:
+
+```powershell
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local-postgres" "-Dspring-boot.run.arguments=--spring.jpa.hibernate.ddl-auto=update"
+```
+
+เมื่อแอปเริ่มสำเร็จ ให้หยุดด้วย **Ctrl+C** แล้วใช้ Terminal เดิมในโฟลเดอร์ `code` เพื่อนำ constraints และ indexes ของ BookingEquipment ไปใช้ โดยใช้รหัสผ่านผ่าน prompt ของ `psql` (ตัวอย่างสำหรับ PostgreSQL 18):
+
+```powershell
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -h 127.0.0.1 -p 5432 -U postgres -d room_booking -W -v ON_ERROR_STOP=1 --single-transaction -f '.\src\main\resources\db\nuttachai_673380581-8_04\schema.sql'
+```
+
+คำสั่งนี้ต้องรันจากโฟลเดอร์ `code` เช่นกัน และไม่ต้องรัน `data.sql` สำหรับข้อมูลจริง หากเป็นฐานข้อมูลที่มีข้อมูลอยู่แล้ว ให้หยุดการเขียนข้อมูลและสำรองฐานข้อมูลก่อนปรับ schema
+
+จากนั้นรันตามปกติด้วยคำสั่งนี้:
+
+```powershell
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local-postgres"
+```
+
+เปิด **[http://127.0.0.1:8080/](http://127.0.0.1:8080/)** การรันปกติใช้ `ddl-auto=validate` เพื่อตรวจว่าตารางตรงกับ Entity โดยไม่แก้ schema อัตโนมัติ เมื่อแก้ Entity ต้องเตรียมการปรับ schema แยกต่างหาก
+
+- ฐานข้อมูลนี้เริ่มว่าง: ไม่มีบัญชี `narin`, `staff`, `admin` และไม่มีห้องหรืออุปกรณ์ทดลอง
+- สมัครสมาชิกผ่าน `/register` ได้ โดยบัญชีที่สมัครเป็นบทบาท `USER`; การตั้งผู้ดูแลคนแรกต้องจัดเตรียมแยกต่างหาก
+- ข้อมูลเดิมใน H2 ไม่ถูกย้ายมายัง PostgreSQL อัตโนมัติ
+- รหัสผ่านอยู่ใน environment ของ Terminal และโปรเซสลูก ปิด Terminal หลังเลิกใช้งาน หรือรัน `Remove-Item Env:DB_PASSWORD` หลังหยุดแอป
+- หากใช้ IDE เลือก active profile `local-postgres` และกำหนด `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` ใน Run Configuration ของเครื่องตนเอง โดยไม่เก็บค่าลับลง Git
+- โหมดนี้ยังรับการเชื่อมต่อเฉพาะเครื่องตนเอง การ deploy Railway/Aiven ต้องเตรียม production profile และความปลอดภัยเพิ่มเติม
 
 ## 7. รันชุดทดสอบ
 
