@@ -139,6 +139,26 @@
                 </plugins>
             </build>
         </profile>
+        <!-- Tests owned by krittitee_673380572-9_04 (Room / Equipment / booking rule Strategy).
+             Run with: ./mvnw test -P krittitee_673380572-9_04 -->
+        <profile>
+            <id>krittitee_673380572-9_04</id>
+            <properties>
+                <roombooking.testSourceDirectory>${project.basedir}/../test/krittitee_673380572-9_04/java</roombooking.testSourceDirectory>
+                <roombooking.testOutputDirectory>${project.build.directory}/krittitee_673380572-9_04-test-classes</roombooking.testOutputDirectory>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <reportsDirectory>${project.build.directory}/krittitee_673380572-9_04-surefire-reports</reportsDirectory>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
 </project>

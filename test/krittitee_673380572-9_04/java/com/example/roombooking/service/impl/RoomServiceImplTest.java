@@ -5,6 +5,7 @@ import com.example.roombooking.domain.enums.RoomStatus;
 import com.example.roombooking.domain.enums.RoomType;
 import com.example.roombooking.dto.request.RoomCreateRequest;
 import com.example.roombooking.dto.response.RoomResponse;
+import com.example.roombooking.exception.ConflictException;
 import com.example.roombooking.exception.ResourceNotFoundException;
 import com.example.roombooking.mapper.RoomMapper;
 import com.example.roombooking.repository.MeetingRoomRepository;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +25,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -150,5 +153,26 @@ class RoomServiceImplTest {
 
         assertThrows(ResourceNotFoundException.class, () -> roomService.deleteRoom(99L));
         verify(meetingRoomRepository, never()).delete(any(MeetingRoom.class));
+    }
+
+    @Test
+    void deleteRoom_found_flushesSoForeignKeyErrorIsRaisedHere() {
+        MeetingRoom existing = buildRoom(1L);
+        when(meetingRoomRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        roomService.deleteRoom(1L);
+
+        verify(meetingRoomRepository).flush();
+    }
+
+    @Test
+    void deleteRoom_hasBookings_throwsConflict() {
+        // ห้องที่มี booking อ้างถึงอยู่ ลบแล้วชน foreign key -> ต้องได้ ConflictException (409) ไม่ใช่ 500
+        MeetingRoom existing = buildRoom(1L);
+        when(meetingRoomRepository.findById(1L)).thenReturn(Optional.of(existing));
+        doThrow(new DataIntegrityViolationException("fk_booking_room"))
+                .when(meetingRoomRepository).flush();
+
+        assertThrows(ConflictException.class, () -> roomService.deleteRoom(1L));
     }
 }
