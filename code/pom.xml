@@ -103,6 +103,21 @@
         <testSourceDirectory>${roombooking.testSourceDirectory}</testSourceDirectory>
         <testOutputDirectory>${roombooking.testOutputDirectory}</testOutputDirectory>
         <plugins>
+            <!-- JDK 23 ขึ้นไปไม่รัน annotation processor ให้อัตโนมัติแล้ว ต้องระบุ Lombok ตรงนี้
+                 ไม่งั้น getter/setter/builder/log ที่ Lombok สร้างจะหายและคอมไพล์ไม่ผ่าน -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
