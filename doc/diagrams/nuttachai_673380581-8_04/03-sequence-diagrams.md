@@ -49,7 +49,7 @@ sequenceDiagram
         Linking-->>Validation: peakReserved
         Validation->>Validation: requested <= totalQuantity - peakReserved
     end
-    Validation-->>Service: ผ่าน; context มี room และจำนวนอุปกรณ์รวม
+    Validation-->>Service: ผ่าน, context มี room และจำนวนอุปกรณ์รวม
     opt มี bookingForUserId
         Service->>Repos: UserRepository.findById(bookingForUserId)
         Repos-->>Service: bookedFor
@@ -119,7 +119,7 @@ sequenceDiagram
         Linking-->>Validation: peakReserved ที่ไม่รวม Booking เดิม
         Validation->>Validation: ตรวจจำนวนที่ขอใหม่ <= totalQuantity - peakReserved
     end
-    Validation-->>Service: ผ่าน; context มีข้อมูลที่ตรวจแล้ว
+    Validation-->>Service: ผ่าน, context มีข้อมูลที่ตรวจแล้ว
     Service->>Mapper: updateEntity(existingBooking, request, room)
     Note over Mapper: เปลี่ยน room / startTime / endTime / purpose<br/>ไม่เปลี่ยน user หรือ status
     Mapper-->>Service: อัปเดต entity เดิม
@@ -175,7 +175,7 @@ sequenceDiagram
     Validation->>Linking: sumReservedQuantity(id, start, end, null)
     Linking->>Linking: findOverlappingReservations(...) และหา peakReserved
     Linking-->>Validation: peakReserved = 4
-    Validation->>Validation: available = 5 - 4 = 1; requested = 3
+    Validation->>Validation: available = 5 - 4 = 1, requested = 3
     Validation-->>Service: โยน EquipmentNotAvailableException
     Note over Validation,Service: Chain หยุดทันที<br/>ไม่ถึง Mapper.toEntity / attachEquipment / BookingRepository.save
     Service-->>API: Exception ส่งต่อออกจาก Transaction
