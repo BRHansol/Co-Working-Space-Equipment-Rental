@@ -31,6 +31,7 @@
         <java.version>17</java.version>
         <roombooking.testSourceDirectory>${project.basedir}/src/test/java</roombooking.testSourceDirectory>
         <roombooking.testOutputDirectory>${project.build.directory}/test-classes</roombooking.testOutputDirectory>
+        <roombooking.skipMemberTestSources>false</roombooking.skipMemberTestSources>
     </properties>
     <dependencies>
         <dependency>
@@ -78,7 +79,7 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>runtime</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
@@ -139,6 +140,7 @@
                             <goal>add-test-source</goal>
                         </goals>
                         <configuration>
+                            <skipAddTestSource>${roombooking.skipMemberTestSources}</skipAddTestSource>
                             <sources>
                                 <source>${project.basedir}/../test/nuttachai_673380581-8_04/java</source>
                                 <source>${project.basedir}/../test/krittitee_673380572-9_04/java</source>
@@ -153,20 +155,13 @@
 
     <profiles>
         <!-- Tests owned by nuttachai_673380581-8_04 live under the repository's required test/ folder.
-             Separate output/report folders keep this profile independent of other members' tests. -->
+             Skip shared test sources and use separate output/report folders for this member's suite. -->
         <profile>
             <id>nuttachai_673380581-8_04</id>
-            <dependencies>
-                <!-- Spring Boot 4 provides @DataJpaTest in a separate test module. -->
-                <dependency>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-data-jpa-test</artifactId>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
             <properties>
                 <roombooking.testSourceDirectory>${project.basedir}/../test/nuttachai_673380581-8_04/java</roombooking.testSourceDirectory>
                 <roombooking.testOutputDirectory>${project.build.directory}/nuttachai_673380581-8_04-test-classes</roombooking.testOutputDirectory>
+                <roombooking.skipMemberTestSources>true</roombooking.skipMemberTestSources>
             </properties>
             <build>
                 <plugins>
@@ -187,6 +182,7 @@
             <properties>
                 <roombooking.testSourceDirectory>${project.basedir}/../test/krittitee_673380572-9_04/java</roombooking.testSourceDirectory>
                 <roombooking.testOutputDirectory>${project.build.directory}/krittitee_673380572-9_04-test-classes</roombooking.testOutputDirectory>
+                <roombooking.skipMemberTestSources>true</roombooking.skipMemberTestSources>
             </properties>
             <build>
                 <plugins>

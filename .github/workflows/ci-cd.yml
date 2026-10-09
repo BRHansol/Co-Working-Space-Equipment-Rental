@@ -1,7 +1,7 @@
 # CI/CD: Build -> Test -> Deploy (Render)
 # - ทุก push / pull request เข้า main หรือ develop: build แล้วรัน test
 # - push เข้า main หรือ develop และ test ผ่านหมด: สั่ง Render deploy ทั้ง 2 service ผ่าน Deploy Hook
-#   (API = SPRING_PROFILES_ACTIVE=api, หน้าเว็บ = SPRING_PROFILES_ACTIVE=local-postgres)
+#   (API = SPRING_PROFILES_ACTIVE=api, หน้าเว็บ = SPRING_PROFILES_ACTIVE=prod)
 # โค้ด Spring Boot อยู่ในโฟลเดอร์ code/ ทุกคำสั่ง Maven จึงรันใน code/
 
 name: CI/CD

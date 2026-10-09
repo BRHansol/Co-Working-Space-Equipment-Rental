@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="th" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('ตรวจสอบรายการ')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar('')}"></header>
+<main class="page-shell">
+    <section class="card empty-state">
+        <p class="eyebrow" th:text="${status}">404</p>
+        <h1 th:text="${title}">ไม่พบหน้าที่ต้องการ</h1>
+        <p th:text="${message}">กรุณากลับไปที่หน้าหลัก</p>
+        <a class="btn btn-primary" th:href="@{/}">กลับหน้าหลัก</a>
+        <a class="btn btn-secondary" th:href="@{/bookings}">การจองของฉัน</a>
+    </section>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

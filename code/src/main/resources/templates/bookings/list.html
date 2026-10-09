@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="th" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('การจองของฉัน')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar('bookings')}"></header>
+<main id="main-content" class="page-shell">
+  <div class="page-heading">
+    <div><p class="eyebrow">YOUR BOOKINGS</p><h1>การจองของฉัน</h1><p class="muted">ดูสถานะและจัดการการจองพื้นที่ทำงานของคุณ</p></div>
+    <a class="btn btn-primary" th:href="@{/bookings/new}">สร้างการจองใหม่ <span aria-hidden="true">↗</span></a>
+  </div>
+  <div th:replace="~{fragments/messages :: messages}"></div>
+  <form class="card form-grid booking-filters" method="get" th:action="@{/bookings}">
+    <div class="field"><label for="status">สถานะ</label><select id="status" name="status"><option value="">ทุกสถานะ</option><option th:each="entry : ${statusLabels}" th:value="${entry.key}" th:text="${entry.value}" th:selected="${status == entry.key}"></option></select></div>
+    <div class="field"><label for="from">ตั้งแต่วันที่</label><input id="from" name="from" type="date" th:value="${from}"></div>
+    <div class="field"><label for="to">ถึงวันที่</label><input id="to" name="to" type="date" th:value="${to}"></div>
+    <div class="form-actions"><button class="btn btn-secondary" type="submit">ค้นหารายการ</button><a class="btn btn-text" th:href="@{/bookings}">ล้างตัวกรอง</a></div>
+  </form>
+  <div class="empty-state card" th:if="${bookings.isEmpty()}">
+    <p class="eyebrow">A SPACE FOR YOUR NEXT IDEA</p><h2>ยังไม่มีรายการที่ตรงกับการค้นหา</h2><p>เริ่มเลือกห้องสำหรับงานครั้งต่อไป หรือปรับตัวกรองเพื่อดูรายการอื่น</p><a class="btn btn-primary" th:href="@{/rooms}">สำรวจพื้นที่ทำงาน</a>
+  </div>
+  <div class="card table-wrap" th:if="${!bookings.isEmpty()}">
+    <table class="data-table">
+      <caption class="sr-only">รายการจองของคุณ</caption>
+      <thead><tr><th scope="col">ห้องและรหัสการจอง</th><th scope="col">วันและเวลา</th><th scope="col">สถานะ</th><th scope="col">รายละเอียด</th></tr></thead>
+      <tbody><tr th:each="booking : ${bookings}">
+        <td><div class="booking-room"><img class="booking-row-image" src="/assets/img/room-focus.png" alt="" width="72" height="72" loading="lazy"><div><strong th:text="${booking.roomName}"></strong><div class="muted" th:text="${'BK-' + #numbers.formatInteger(booking.id, 4)}"></div></div></div></td>
+        <td><span th:text="${dateLabels[booking.id]}"></span><div class="muted" th:text="${timeLabels[booking.id] + ' น.'}"></div></td>
+        <td><span class="status-pill" th:classappend="${'status-' + booking.status.name().toLowerCase()}" th:text="${statusLabels[booking.status]}"></span></td>
+        <td><a class="btn btn-text" th:href="@{/bookings/{id}(id=${booking.id})}" th:attr="aria-label=${'ดูรายละเอียดการจอง ' + booking.roomName + ' รหัส BK-' + booking.id}">ดูรายละเอียด <span aria-hidden="true">→</span></a></td>
+      </tr></tbody>
+    </table>
+  </div>
+  <nav class="pagination" aria-label="หน้ารายการจอง" th:if="${bookingPage.totalPages > 1}">
+    <a class="btn btn-secondary" th:if="${bookingPage.hasPrevious()}" th:href="@{/bookings(page=${bookingPage.number - 1},status=${status},from=${from},to=${to})}">หน้าก่อนหน้า</a>
+    <span th:text="${'หน้า ' + (bookingPage.number + 1) + ' จาก ' + bookingPage.totalPages}"></span>
+    <a class="btn btn-secondary" th:if="${bookingPage.hasNext()}" th:href="@{/bookings(page=${bookingPage.number + 1},status=${status},from=${from},to=${to})}">หน้าถัดไป</a>
+  </nav>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

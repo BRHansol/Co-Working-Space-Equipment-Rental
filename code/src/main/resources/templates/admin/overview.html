@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html lang="th" xmlns:th="http://www.thymeleaf.org"><head th:replace="~{fragments/head :: head('ภาพรวมผู้ดูแล')}"></head><body class="admin-body"><div class="admin-layout">
+<aside th:replace="~{fragments/admin-sidebar :: sidebar('overview')}"></aside><main class="admin-main" id="main-content"><div th:replace="~{fragments/admin-sidebar :: topbar('ภาพรวมผู้ดูแล')}"></div><div th:replace="~{fragments/messages :: messages}"></div>
+<div class="page-heading"><h1>ภาพรวมผู้ดูแล</h1><p>จัดการพื้นที่ อุปกรณ์ และคำขอจอง</p></div>
+<div class="grid-3"><section class="card"><p>ห้องในระบบ</p><h2 th:text="${roomCount}"></h2><a th:href="@{/admin/rooms}">จัดการห้อง →</a></section><section class="card"><p>รายการอุปกรณ์</p><h2 th:text="${equipmentCount}"></h2><a th:href="@{/admin/equipment}">จัดการอุปกรณ์ →</a></section><section class="card"><p>คำขอรออนุมัติ</p><h2 th:text="${pendingCount}"></h2><a th:href="@{/admin/bookings(status='PENDING')}">ดูคำขอจอง →</a></section></div>
+<div class="grid-2"><section class="card"><h2>การจอง</h2><p><span th:text="${bookingCount}"></span> รายการในระบบ</p><a class="btn btn-primary" th:href="@{/admin/bookings}">ดูรายการจอง</a><a class="btn btn-secondary" th:href="@{/admin/bookings/new}">จองแทนผู้ใช้</a></section><section class="card" th:if="${isAdmin}"><h2>ผู้ใช้</h2><p><span th:text="${userCount}"></span> บัญชีในระบบ</p><a class="btn btn-secondary" th:href="@{/admin/users}">จัดการผู้ใช้</a></section></div>
+<section class="card"><h2>การจองล่าสุด</h2><div th:replace="~{admin/fragments :: bookingTable(${recentBookings})}"></div></section>
+</main></div></body></html>

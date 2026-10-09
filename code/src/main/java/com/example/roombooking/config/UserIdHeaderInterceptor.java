@@ -2,6 +2,7 @@ package com.example.roombooking.config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -13,6 +14,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
  * Spring Security filter u0e17u0e35u0e48u0e14u0e36u0e07 user ID u0e08u0e32u0e01 Authentication context u0e41u0e17u0e19
  */
 @Component
+@Profile("!web")
 public class UserIdHeaderInterceptor implements HandlerInterceptor {
 
     public static final String USER_ID_HEADER = "X-User-Id";
