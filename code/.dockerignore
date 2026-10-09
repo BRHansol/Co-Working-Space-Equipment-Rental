@@ -8,3 +8,5 @@ target/
 .env.*
 *.pem
 *.key
+Environment variables
+.env
