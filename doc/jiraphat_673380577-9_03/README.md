@@ -32,6 +32,10 @@ code/
     ├── event/NotificationListener.java
     ├── service/NotificationService.java
     ├── service/impl/NotificationServiceImpl.java
+    ├── service/BookingStatusHistoryService.java
+    ├── service/impl/BookingStatusHistoryServiceImpl.java
+    ├── controller/api/BookingStatusHistoryController.java   (GET /api/v1/bookings/{id}/status-history)
+    ├── dto/response/BookingStatusHistoryResponse.java
     ├── config/JpaAuditingConfig.java
     ├── config/SwaggerConfig.java
     ├── exception/GlobalExceptionHandler.java
@@ -41,7 +45,7 @@ code/
 
 ## Test
 
-เทสต์อยู่ที่ `test/jiraphat_673380577-9_03/java/` (รวม 35 test cases) และถูกรันพร้อม test ของทุกคนผ่าน `build-helper-maven-plugin` ใน `pom.xml`
+เทสต์อยู่ที่ `test/jiraphat_673380577-9_03/java/` (รวม 43 test cases) และถูกรันพร้อม test ของทุกคนผ่าน `build-helper-maven-plugin` ใน `pom.xml`
 
 | ไฟล์ | ทดสอบอะไร |
 |---|---|
@@ -51,6 +55,8 @@ code/
 | `event/BookingStatusObserverIntegrationTest` | `@SpringBootTest`: อนุมัติแล้วมี event และประวัติ, ทุกการเปลี่ยนสถานะเพิ่มประวัติ 1 แถว, เปลี่ยนสถานะผิดกฎแล้วไม่มี event และไม่มีประวัติ |
 | `exception/GlobalExceptionHandlerTest` | `@WebMvcTest`: แต่ละ exception ได้ status code ถูกต้อง (400/403/404/405/409/500) และรูปแบบ `ErrorResponse` ครบ, ไม่หลุดข้อความ SQL หรือรายละเอียดภายในออกไป, controller หน้าเว็บไม่ถูกจับเป็น JSON |
 | `exception/InvalidSortIntegrationTest` | `?sort=string` (ค่าตัวอย่างใน Swagger) ที่ rooms, equipments, rooms/{id}/bookings ต้องได้ 400 ไม่ใช่ 500 และ sort ด้วย field ที่มีจริงยังใช้ได้ |
+| `service/impl/BookingStatusHistoryServiceImplTest` | Mockito: แปลง history เป็น DTO ครบทุก field, ไม่มีผู้เปลี่ยนแสดงเป็น `system`, booking ที่ไม่มีจริงได้ 404 |
+| `controller/api/BookingStatusHistoryControllerIntegrationTest` | `@SpringBootTest`: เปลี่ยนสถานะจริงแล้วเรียก API เห็นประวัติเรียงจากล่าสุด, ไม่มีการเปลี่ยนได้ `[]`, id ไม่มีจริงได้ 404, id เป็นตัวอักษรได้ 400 |
 | `config/SwaggerConfigTest` | `/v3/api-docs` มีข้อมูล API และ endpoint ของ booking, ไม่ประกาศระบบ login ที่ยังไม่มี, Swagger UI เปิดได้ |
 
 ### วิธีรัน

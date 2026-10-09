@@ -164,8 +164,30 @@ sequenceDiagram
 | `service/impl/NotificationServiceImplTest` | สร้าง `BookingStatusHistory` ถูกต้องแล้ว save |
 | `event/BookingStatusObserverIntegrationTest` | `@SpringBootTest` ใช้ระบบจริง: อนุมัติแล้วมีประวัติ, เปลี่ยนสถานะหลายครั้งได้ประวัติครบทุกครั้ง, **เปลี่ยนสถานะผิดกฎแล้วไม่มี event และไม่มีประวัติ** |
 | `repository/BookingStatusHistoryRepositoryTest` | `changedAt` ถูกเติมอัตโนมัติ, ค้นประวัติเรียงจากล่าสุด, สถานะเก็บเป็นข้อความ |
+| `controller/api/BookingStatusHistoryControllerIntegrationTest` | เปลี่ยนสถานะจริงแล้วอ่านประวัติกลับผ่าน REST API ได้ครบและเรียงถูก |
 
 ไฟล์ test อยู่ที่ `test/jiraphat_673380577-9_03/java/com/example/roombooking/`
+
+## ดูผลของ Observer ผ่าน API
+
+ประวัติที่ Observer บันทึกไว้ อ่านได้ที่
+
+```
+GET /api/v1/bookings/{id}/status-history
+```
+
+```json
+[
+  { "id": 1, "bookingId": 2, "oldStatus": "PENDING", "newStatus": "APPROVED",
+    "changedById": 1, "changedBy": "admin01", "changedAt": "2026-10-11T16:20:31.814" }
+]
+```
+
+| ไฟล์ | หน้าที่ |
+|---|---|
+| `controller/api/BookingStatusHistoryController.java` | endpoint (ใช้ได้ใน profile `api`, หน้าเว็บ `prod` ปิด `/api/**` ไว้) |
+| `service/impl/BookingStatusHistoryServiceImpl.java` | ตรวจว่ามี booking จริง (ไม่มีได้ 404, มีแต่ยังไม่เคยเปลี่ยนสถานะได้ `[]`) และแปลงเป็น DTO ภายใน `@Transactional(readOnly = true)` เพราะ `changedBy` เป็น LAZY และปิด open-in-view ไว้ |
+| `dto/response/BookingStatusHistoryResponse.java` | ส่งแค่ username ของผู้เปลี่ยน ไม่ส่ง entity `User` ทั้งก้อน (ซึ่งมี password) ออกไป |
 
 ## ข้อจำกัดที่รู้อยู่
 

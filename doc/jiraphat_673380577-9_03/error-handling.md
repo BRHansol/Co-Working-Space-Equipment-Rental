@@ -63,6 +63,16 @@ Path ย่อจาก `code/src/main/java/com/example/roombooking/`
 | ลบข้อมูลที่ถูกอ้างอิงแล้ว error หลุดชื่อตาราง | ข้อความจาก PostgreSQL ถูกส่งกลับไปตรง ๆ | ตอบข้อความกลาง ๆ แล้ว log รายละเอียดฝั่ง server (บรรทัด 73–79) |
 | หน้าเว็บได้ JSON แทนหน้า error | Advice จับทุก controller | จำกัด `basePackages` ไว้ที่ `controller.api` (บรรทัด 27) |
 
+## ตัวอย่าง: endpoint ประวัติสถานะ
+
+`GET /api/v1/bookings/{id}/status-history` ใช้ handler ชุดเดียวกัน ไม่ต้องเขียนจัดการ error เพิ่มใน controller
+
+| เรียก | ผล |
+|---|---|
+| booking ที่มีจริง | 200 + รายการประวัติ (หรือ `[]` ถ้ายังไม่เคยเปลี่ยนสถานะ) |
+| `/bookings/999999/status-history` | 404 จาก `ResourceNotFoundException` |
+| `/bookings/abc/status-history` | 400 จาก `MethodArgumentTypeMismatchException` |
+
 ## Swagger / OpenAPI
 
 | | |
