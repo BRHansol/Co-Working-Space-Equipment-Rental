@@ -122,6 +122,28 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <!-- test ของแต่ละคนอยู่ใน test/<branch>/java ที่ root ของ repo
+                 เพิ่มเป็น test source เพื่อให้ mvn test คำสั่งเดียว (และ CI) รันครบทุกคน -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-member-tests</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.basedir}/../test/nuttachai_673380581-8_04/java</source>
+                                <source>${project.basedir}/../test/krittitee_673380572-9_04/java</source>
+                                <source>${project.basedir}/../test/jiraphat_673380577-9_03/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
