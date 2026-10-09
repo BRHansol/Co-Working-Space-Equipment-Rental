@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="th" xmlns:th="http://www.thymeleaf.org">
+<header class="site-header" th:fragment="navbar(active)">
+  <a class="skip-link" href="#main-content">ข้ามไปเนื้อหา</a>
+  <div class="site-header-inner">
+    <a class="brand" th:href="@{/}" href="/" aria-label="Co-Working-Space-Equipment-Rental หน้าแรก">
+      <span class="brand-mark" aria-hidden="true"></span><span class="brand-name">Co-Working-Space-<br>Equipment-Rental</span>
+    </a>
+    <button class="mobile-menu-button" type="button" data-menu-toggle aria-controls="site-navigation" aria-expanded="false"><span aria-hidden="true">☰</span><span class="sr-only">เปิดเมนูหลัก</span></button>
+    <nav id="site-navigation" class="site-navigation" aria-label="เมนูหลัก">
+      <a th:href="@{/}" href="/" th:classappend="${active == 'home'} ? 'active'" th:attr="aria-current=${active == 'home' ? 'page' : null}">หน้าแรก</a>
+      <a th:href="@{/rooms}" href="/rooms" th:classappend="${active == 'rooms'} ? 'active'" th:attr="aria-current=${active == 'rooms' ? 'page' : null}">พื้นที่ทำงาน</a>
+      <a th:href="@{/equipment}" href="/equipment" th:classappend="${active == 'equipment'} ? 'active'" th:attr="aria-current=${active == 'equipment' ? 'page' : null}">อุปกรณ์</a>
+      <a th:href="@{/bookings}" href="/bookings" th:classappend="${active == 'bookings'} ? 'active'" th:attr="aria-current=${active == 'bookings' ? 'page' : null}">การจองของฉัน</a>
+      <a class="mobile-guest-login" th:if="${currentUser == null}" th:href="@{/login}" href="/login">เข้าสู่ระบบ</a>
+    </nav>
+    <div class="header-account" th:classappend="${currentUser == null} ? 'header-account-guest'">
+      <a class="btn btn-secondary btn-small" th:if="${currentUser == null}" th:href="@{/login}" href="/login">เข้าสู่ระบบ</a>
+      <details class="account-menu" th:if="${currentUser != null}">
+        <summary><span class="avatar" th:text="${#strings.toUpperCase(#strings.substring(currentUser.username,0,1))}">N</span><span class="account-name" th:text="${currentUser.username}">ผู้ใช้</span><span aria-hidden="true">⌄</span></summary>
+        <div class="account-menu-panel">
+          <a th:href="@{/account}" href="/account">ข้อมูลบัญชี</a>
+          <a th:href="@{/bookings}" href="/bookings">การจองของฉัน</a>
+          <a th:if="${isManager}" th:href="@{/admin}" href="/admin">หน้าผู้ดูแล</a>
+          <form method="post" th:action="@{/logout}" action="/logout"><input type="hidden" name="_csrf" th:value="${csrfToken}"><button type="submit">ออกจากระบบ</button></form>
+        </div>
+      </details>
+    </div>
+  </div>
+</header>
+</html>

@@ -5,6 +5,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -93,6 +95,25 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.toList());
         log.warn("Validation failed: {}", details);
         return buildResponse(HttpStatus.BAD_REQUEST, "ข้อมูลที่ส่งมาไม่ถูกต้อง", request, details);
+    }
+
+    // 400 - สั่งเรียงลำดับด้วย field ที่ไม่มีจริง (เช่น ?sort=string ซึ่งเป็นค่าตัวอย่างใน Swagger UI)
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidSortProperty(PropertyReferenceException ex,
+                                                                    HttpServletRequest request) {
+        log.warn("Invalid sort property: {}", ex.getPropertyName());
+        return buildResponse(HttpStatus.BAD_REQUEST,
+                "ไม่สามารถเรียงลำดับด้วย '" + ex.getPropertyName() + "' ได้", request, null);
+    }
+
+    // Spring Data ห่อ PropertyReferenceException ไว้ใน InvalidDataAccessApiUsageException ตอน query จริง
+    @ExceptionHandler(InvalidDataAccessApiUsageException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidDataAccessApiUsage(InvalidDataAccessApiUsageException ex,
+                                                                          HttpServletRequest request) {
+        if (ex.getMostSpecificCause() instanceof PropertyReferenceException propertyEx) {
+            return handleInvalidSortProperty(propertyEx, request);
+        }
+        return handleGeneral(ex, request);
     }
 
     // 400 - body อ่านไม่ได้ (JSON พัง, enum ไม่มีจริง, วันที่ผิดรูปแบบ)

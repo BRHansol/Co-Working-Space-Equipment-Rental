@@ -3,5 +3,10 @@ target/
 .idea/
 .vscode/
 *.iml
-### Environment variables ###
+.local-data/
+.env
+.env.*
+*.pem
+*.key
+Environment variables
 .env

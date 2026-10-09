@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="th" xmlns:th="http://www.thymeleaf.org">
+<aside class="admin-sidebar" th:fragment="sidebar(active)">
+  <a class="brand" th:href="@{/admin}" href="/admin"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name">Co-Working-Space-<br>Equipment-Rental</span></a>
+  <span class="admin-role" th:text="${isAdmin ? 'ADMIN' : 'STAFF'}">ผู้ดูแล</span>
+  <nav aria-label="เมนูผู้ดูแล">
+    <a th:href="@{/admin}" href="/admin" th:classappend="${active == 'overview'} ? 'active'">ภาพรวม</a>
+    <a th:href="@{/admin/bookings}" href="/admin/bookings" th:classappend="${active == 'bookings'} ? 'active'">การจอง</a>
+    <a th:href="@{/admin/rooms}" href="/admin/rooms" th:classappend="${active == 'rooms'} ? 'active'">ห้อง</a>
+    <a th:href="@{/admin/equipment}" href="/admin/equipment" th:classappend="${active == 'equipment'} ? 'active'">อุปกรณ์</a>
+    <a th:if="${isAdmin}" th:href="@{/admin/users}" href="/admin/users" th:classappend="${active == 'users'} ? 'active'">ผู้ใช้</a>
+  </nav>
+  <a class="admin-back" th:href="@{/}" href="/">← กลับหน้าเว็บไซต์</a>
+  <div class="admin-sidebar-account"><span class="avatar" aria-hidden="true">A</span><span th:text="${currentUser != null ? currentUser.username : 'ผู้ดูแล'}">ผู้ดูแล</span></div>
+</aside>
+<div class="admin-topbar" th:fragment="topbar(title)"><span th:text="${title}">หน้าผู้ดูแล</span><a th:href="@{/account}" href="/account">ข้อมูลบัญชี <span aria-hidden="true">↗</span></a></div>
+</html>
