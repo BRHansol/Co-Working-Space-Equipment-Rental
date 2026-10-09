@@ -3,6 +3,7 @@ package com.example.roombooking.service.impl;
 import com.example.roombooking.domain.entity.Equipment;
 import com.example.roombooking.dto.request.EquipmentCreateRequest;
 import com.example.roombooking.dto.response.EquipmentResponse;
+import com.example.roombooking.exception.ConflictException;
 import com.example.roombooking.exception.ResourceNotFoundException;
 import com.example.roombooking.mapper.EquipmentMapper;
 import com.example.roombooking.repository.EquipmentRepository;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +23,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -157,5 +160,26 @@ class EquipmentServiceImplTest {
 
         assertThrows(ResourceNotFoundException.class, () -> equipmentService.deleteEquipment(99L));
         verify(equipmentRepository, never()).delete(any(Equipment.class));
+    }
+
+    @Test
+    void deleteEquipment_found_flushesSoForeignKeyErrorIsRaisedHere() {
+        Equipment existing = buildEquipment(1L);
+        when(equipmentRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        equipmentService.deleteEquipment(1L);
+
+        verify(equipmentRepository).flush();
+    }
+
+    @Test
+    void deleteEquipment_usedInBooking_throwsConflict() {
+        // อุปกรณ์ที่ booking_equipment อ้างถึงอยู่ ลบแล้วชน foreign key -> ต้องได้ ConflictException (409)
+        Equipment existing = buildEquipment(1L);
+        when(equipmentRepository.findById(1L)).thenReturn(Optional.of(existing));
+        doThrow(new DataIntegrityViolationException("fk_booking_equipment_equipment"))
+                .when(equipmentRepository).flush();
+
+        assertThrows(ConflictException.class, () -> equipmentService.deleteEquipment(1L));
     }
 }
