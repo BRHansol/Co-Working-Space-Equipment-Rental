@@ -1,0 +1,104 @@
+# CI/CD: Build -> Test -> Deploy (Render)
+# - ทุก push / pull request เข้า main หรือ develop: build แล้วรัน test
+# - push เข้า main หรือ develop และ test ผ่านหมด: สั่ง Render deploy ผ่าน Deploy Hook
+# โค้ด Spring Boot อยู่ในโฟลเดอร์ code/ ทุกคำสั่ง Maven จึงรันใน code/
+
+name: CI/CD
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: code
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+          cache-dependency-path: code/pom.xml
+
+      # สร้าง jar แบบเดียวกับใน Dockerfile (ยังไม่รัน test ในขั้นนี้)
+      - name: Build with Maven
+        run: mvn -B clean package -Dmaven.test.skip=true
+
+      - name: Upload jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: code/target/*.jar
+          retention-days: 7
+
+  test:
+    name: Test
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+          cache-dependency-path: code/pom.xml
+
+      # test ใช้ H2 (src/test/resources/application.properties) ไม่ต้องมี PostgreSQL
+      - name: Run tests
+        run: mvn -B test
+
+      # สร้าง Test Report แบบ HTML แม้ test จะ fail เพื่อดูว่า fail ตัวไหน
+      - name: Generate test report
+        if: always()
+        run: mvn -B surefire-report:report-only
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: |
+            code/target/reports/
+            code/target/surefire-reports/
+          retention-days: 14
+
+  deploy:
+    name: Deploy to Render
+    needs: test
+    # deploy เฉพาะตอน push (merge แล้ว) ไม่ deploy จาก pull request
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    # job นี้ไม่ได้ checkout โค้ด จึงไม่มีโฟลเดอร์ code/
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      # Render จะ build Dockerfile ใหม่จาก branch ที่ตั้งไว้ใน Render
+      # RENDER_DEPLOY_HOOK_URL ตั้งใน GitHub: Settings > Secrets and variables > Actions
+      - name: Trigger Render deploy
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "::warning::ยังไม่ได้ตั้ง secret RENDER_DEPLOY_HOOK_URL จึงข้ามการ deploy"
+            exit 0
+          fi
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
+          echo "สั่ง deploy บน Render แล้ว ดูความคืบหน้าในหน้า Render Dashboard"
