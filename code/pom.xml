@@ -145,6 +145,7 @@
                                 <source>${project.basedir}/../test/nuttachai_673380581-8_04/java</source>
                                 <source>${project.basedir}/../test/krittitee_673380572-9_04/java</source>
                                 <source>${project.basedir}/../test/jiraphat_673380577-9_03/java</source>
+                                <source>${project.basedir}/../test/yuttana_673380422-8_03/java</source>
                             </sources>
                         </configuration>
                     </execution>
@@ -191,6 +192,27 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <reportsDirectory>${project.build.directory}/krittitee_673380572-9_04-surefire-reports</reportsDirectory>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- Tests owned by yuttana_673380422-8_03 (User / UserServiceImpl).
+             Run with: ./mvnw test -P yuttana_673380422-8_03 -->
+        <profile>
+            <id>yuttana_673380422-8_03</id>
+            <properties>
+                <roombooking.testSourceDirectory>${project.basedir}/../test/yuttana_673380422-8_03/java</roombooking.testSourceDirectory>
+                <roombooking.testOutputDirectory>${project.build.directory}/yuttana_673380422-8_03-test-classes</roombooking.testOutputDirectory>
+                <roombooking.skipMemberTestSources>true</roombooking.skipMemberTestSources>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <reportsDirectory>${project.build.directory}/yuttana_673380422-8_03-surefire-reports</reportsDirectory>
                         </configuration>
                     </plugin>
                 </plugins>
