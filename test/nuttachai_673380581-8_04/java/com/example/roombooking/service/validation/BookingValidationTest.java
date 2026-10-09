@@ -25,6 +25,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -65,6 +66,47 @@ class BookingValidationTest {
         assertThrows(IllegalArgumentException.class,
                 () -> new EquipmentAvailabilityHandler(equipment, reservations).handle(context));
         verifyNoInteractions(equipment, reservations);
+    }
+
+    @Test
+    void permitsMaximumQuantityForEachEquipmentWithoutMixingTheirTotals() {
+        EquipmentRepository equipment = mock(EquipmentRepository.class);
+        BookingEquipmentRepository reservations = mock(BookingEquipmentRepository.class);
+        Equipment projector = new Equipment();
+        projector.setName("Projector");
+        projector.setTotalQuantity(Integer.MAX_VALUE);
+        Equipment microphone = new Equipment();
+        microphone.setName("Microphone");
+        microphone.setTotalQuantity(Integer.MAX_VALUE);
+        BookingValidationContext context = context();
+        context.getRequest().setEquipmentItems(List.of(
+                item(7L, Integer.MAX_VALUE - 1), item(8L, Integer.MAX_VALUE), item(7L, 1)));
+        when(equipment.findById(7L)).thenReturn(Optional.of(projector));
+        when(equipment.findById(8L)).thenReturn(Optional.of(microphone));
+        when(reservations.sumReservedQuantity(7L, START, START.plusHours(1), null)).thenReturn(0L);
+        when(reservations.sumReservedQuantity(8L, START, START.plusHours(1), null)).thenReturn(0L);
+
+        assertDoesNotThrow(() -> new EquipmentAvailabilityHandler(equipment, reservations).handle(context));
+
+        assertEquals(Map.of(7L, Integer.MAX_VALUE, 8L, Integer.MAX_VALUE),
+                context.getRequestedEquipmentQuantities());
+    }
+
+    @Test
+    void rejectsEquipmentWhenReservedTotalExceedsIntegerRange() {
+        EquipmentRepository equipment = mock(EquipmentRepository.class);
+        BookingEquipmentRepository reservations = mock(BookingEquipmentRepository.class);
+        Equipment projector = new Equipment();
+        projector.setName("Projector");
+        projector.setTotalQuantity(5);
+        BookingValidationContext context = context();
+        context.getRequest().setEquipmentItems(List.of(item(7L, 1)));
+        when(equipment.findById(7L)).thenReturn(Optional.of(projector));
+        when(reservations.sumReservedQuantity(7L, START, START.plusHours(1), null))
+                .thenReturn(4_294_967_296L);
+
+        assertThrows(EquipmentNotAvailableException.class,
+                () -> new EquipmentAvailabilityHandler(equipment, reservations).handle(context));
     }
 
     static Stream<EquipmentItemRequest> malformedItems() {
@@ -137,6 +179,17 @@ class BookingValidationTest {
         assertDoesNotThrow(() -> new UserPermissionHandler().handle(context));
     }
 
+    @ParameterizedTest
+    @EnumSource(value = Role.class, names = {"ADMIN", "STAFF"})
+    void suspendedStaffAndAdminCannotBookForAnotherUser(Role role) {
+        BookingValidationContext context = context();
+        context.getRequester().setRole(role);
+        context.getRequester().setActive(false);
+        context.getRequest().setBookingForUserId(2L);
+
+        assertThrows(ForbiddenException.class, () -> new UserPermissionHandler().handle(context));
+    }
+
     @Test
     void validatesRoomBeforePuttingItInContext() {
         MeetingRoomRepository rooms = mock(MeetingRoomRepository.class);
@@ -170,7 +223,24 @@ class BookingValidationTest {
         assertThrows(IllegalArgumentException.class, () -> handler.handle(context));
         context.getRequest().setEndTime(null);
         assertThrows(IllegalArgumentException.class, () -> handler.handle(context));
+        context.getRequest().setEndTime(START.plusHours(1));
+        context.getRequest().setStartTime(null);
+        assertThrows(IllegalArgumentException.class, () -> handler.handle(context));
         verifyNoInteractions(bookings);
+    }
+
+    @Test
+    void newBookingRequiresAnEmptyTimeSlot() {
+        BookingRepository bookings = mock(BookingRepository.class);
+        TimeOverlapHandler handler = new TimeOverlapHandler(bookings);
+        BookingValidationContext context = context();
+        when(bookings.findOverlappingBookings(3L, START, START.plusHours(1), ACTIVE))
+                .thenReturn(List.of());
+        assertDoesNotThrow(() -> handler.handle(context));
+
+        when(bookings.findOverlappingBookings(3L, START, START.plusHours(1), ACTIVE))
+                .thenReturn(List.of(Booking.builder().id(9L).build()));
+        assertThrows(RoomNotAvailableException.class, () -> handler.handle(context));
     }
 
     @Test
