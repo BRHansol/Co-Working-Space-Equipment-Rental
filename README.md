@@ -3,7 +3,7 @@
 ระบบจองพื้นที่ทำงานร่วมกัน ห้องประชุม และอุปกรณ์สำหรับการใช้งานในองค์กร  
 สมาชิกเลือกห้อง วันเวลา และอุปกรณ์ ตรวจสอบความว่าง และติดตามสถานะการจองของตนเองได้  
 เจ้าหน้าที่และผู้ดูแลจัดการห้อง อุปกรณ์ การจอง และการจองแทนผู้ใช้ ส่วนผู้ดูแลจัดการบัญชีผู้ใช้ได้  
-พัฒนาด้วย Spring Boot, REST API และ Thymeleaf โดยแยกโหมดเว็บทดลองบนเครื่องออกจากโหมด API ที่ใช้ PostgreSQL
+พัฒนาด้วย Spring Boot, REST API และ Thymeleaf โดยเว็บใช้ profile `prod` กับ PostgreSQL เป็นค่าเริ่มต้น สำหรับ Railway/Aiven; H2 ใช้เฉพาะชุดทดสอบ
 
 Repository: [BRHansol/Co-Working-Space-Equipment-Rental](https://github.com/BRHansol/Co-Working-Space-Equipment-Rental)
 
@@ -27,13 +27,13 @@ Repository: [BRHansol/Co-Working-Space-Equipment-Rental](https://github.com/BRHa
 | Backend | Spring Boot 4.1.1, Spring MVC |
 | Build | Maven Wrapper 3.9.16 |
 | Persistence | Spring Data JPA / Hibernate |
-| ฐานข้อมูล | PostgreSQL สำหรับโหมด API; H2 แบบไฟล์สำหรับ `local` |
+| ฐานข้อมูล | PostgreSQL สำหรับเว็บและ API; H2 in-memory เฉพาะ tests |
 | Frontend | Thymeleaf, HTML, CSS และ JavaScript |
 | Validation | Jakarta Bean Validation |
-| Security | Spring Security, BCrypt และ session/CSRF guard สำหรับเว็บ `local` |
+| Security | Spring Security, BCrypt และ session/CSRF guard สำหรับเว็บ `prod` |
 | API documentation | springdoc-openapi-starter-webmvc-ui 3.1.0 |
 | Testing | JUnit Jupiter 6.0.3, Mockito 5.23.0, Spring Boot Test, H2 และ Awaitility; เวอร์ชันทดสอบจัดการโดย Spring Boot BOM |
-| เครื่องมืออื่น | Lombok, Git/GitHub; มี Dockerfile และ Compose แต่ configuration ยังต้องปรับก่อนใช้งาน |
+| เครื่องมืออื่น | Lombok, Git/GitHub, Dockerfile และ Compose สำหรับเชื่อม PostgreSQL ภายนอก |
 
 ## System Architecture
 
@@ -52,11 +52,11 @@ flowchart TD
     Service --> Repo["repository / Spring Data JPA"]
     Validation --> Repo
     Repo --> Entity["domain/entity"]
-    Entity --> DB["PostgreSQL หรือ H2 local"]
+    Entity --> DB["PostgreSQL runtime / H2 tests"]
     Web -. "บาง controllers ยังเรียกโดยตรง" .-> Repo
 ```
 
-สถานะปัจจุบันยังไม่ผ่านข้อกำหนดห้ามข้าม layer ทั้งหมด: `AuthViewController`, `AdminViewController`, `CatalogViewController` และ `WebSessionSupport` ยังใช้ Repository โดยตรง การปรับโค้ดรอบนี้จำกัดส่วนของสมาชิกคนที่ 4 จึงไม่ได้ย้ายความรับผิดชอบของ controllers ดังกล่าว
+สถานะปัจจุบันยังไม่ผ่านข้อกำหนดห้ามข้าม layer ทั้งหมด: `AuthViewController`, `AdminViewController`, `CatalogViewController` และ `WebSessionSupport` ยังใช้ Repository โดยตรง
 
 Patterns ที่มี implementation ในระบบ:
 
@@ -74,7 +74,7 @@ Patterns ที่มี implementation ในระบบ:
 
 ## Database Design (ER Diagram)
 
-ระบบมี 7 entities แผนภาพนี้อ้างอิง JPA mappings ใน `domain/entity`; ชื่อคอลัมน์ของ properties ที่ไม่ได้ระบุ `@Column` ใช้ naming strategy ของ Hibernate ยังไม่ได้ตรวจ schema PostgreSQL จริงในขั้นตอนจัดทำ README
+ระบบมี 7 entities แผนภาพนี้อ้างอิง JPA mappings ใน `domain/entity`; ชื่อคอลัมน์ของ properties ที่ไม่ได้ระบุ `@Column` ใช้ naming strategy ของ Hibernate มี full-schema bootstrap สำหรับ PostgreSQL และ runtime ใช้ `ddl-auto=validate` เพื่อตรวจความตรงกันของ schema โดยไม่ปรับตารางอัตโนมัติ
 
 ```mermaid
 erDiagram
@@ -147,16 +147,15 @@ erDiagram
 - `BookingEquipment` เป็น associative entity เชื่อม Booking กับ Equipment และเก็บจำนวนที่ขอใช้
 - Booking ใช้ cascade/orphan removal สำหรับรายการอุปกรณ์ และมี index สำหรับห้อง/ช่วงเวลา/ผู้ใช้
 
-### SQL scripts ของสมาชิกคนที่ 4
+### SQL สำหรับ PostgreSQL และขอบเขตสมาชิกคนที่ 4
 
-ไฟล์ [schema.sql](code/src/main/resources/db/person4/schema.sql) และ [data.sql](code/src/main/resources/db/person4/data.sql) เป็น **manual scripts เฉพาะ `booking_equipment`** ไม่ใช่ migration ครบทั้งระบบ และ Spring Boot ไม่รันไฟล์ในโฟลเดอร์นี้โดยอัตโนมัติ
+ใช้ [full schema](code/src/main/resources/db/postgresql/schema.sql) สำหรับ **ฐานข้อมูล PostgreSQL/Aiven ที่ว่าง** ไฟล์นี้สร้างทั้ง 7 ตาราง, foreign keys, enum/quantity checks และ indexes โดยไม่มีบัญชีหรือข้อมูลทดลอง ต้องรันด้วย `psql` แยกก่อนเปิดแอป แล้ว runtime ใช้ `spring.jpa.hibernate.ddl-auto=validate` และ `spring.sql.init.mode=never` ขั้นตอนและ SSL อยู่ใน [HOWTORUN.md](HOWTORUN.md)
 
-1. เตรียมฐานข้อมูลทดสอบและ parent tables `bookings(id)` กับ `equipment(id)` ก่อน โดยใช้ workflow ของเจ้าของตารางเหล่านั้น
-2. อ่านเงื่อนไขและตรวจข้อมูลเดิมตาม comments ใน `schema.sql` แล้วรัน schema ก่อน data; สำรองข้อมูลและหยุด writers ก่อนปรับฐานข้อมูลเดิม
-3. Schema กำหนด FKs เมื่อสร้างตารางใหม่, quantity ห้าม null/ต้องมากกว่า 0 และ indexes ของ `booking_id` กับ `equipment_id` โดยไม่ลบหรือซ่อมข้อมูลเดิมอัตโนมัติ
-4. `data.sql` เพิ่ม fixture เท่านั้น: ต้องมี CANCELLED booking ที่ purpose เป็น `[person4-demo] equipment-link fixture` และ equipment ชื่อ `Person 4 demo equipment` ใน category `person4-demo` ตามเงื่อนไขในไฟล์ หากไม่มี parents ที่ตรงเงื่อนไข จะไม่เพิ่มแถว
+`CREATE TABLE IF NOT EXISTS` ช่วยให้รันซ้ำโดยคงข้อมูลเดิม แต่ไม่ได้แก้ columns/constraints ของตารางที่มีอยู่แล้ว หากฐานข้อมูลเดิมไม่ตรง Entity ต้องตรวจและเตรียม migration แยก ห้ามถือว่า full schema ซ่อมข้อมูลเก่าให้เอง
 
-ไม่ควรนำ scripts นี้ไปตีความว่าเตรียมครบทั้ง 7 ตารางแล้ว ปัจจุบัน configuration หลักยังใช้ `spring.jpa.hibernate.ddl-auto=update` และไม่มี full-system Flyway/Liquibase migration
+[schema ของสมาชิกคนที่ 4](code/src/main/resources/db/nuttachai_673380581-8_04/schema.sql) เป็น manual upgrade เฉพาะ `booking_equipment` ต้องมี parent tables `bookings(id)` กับ `equipment(id)` ก่อน โดยคง positive quantity CHECK และ indexes ธรรมดา ไม่เพิ่ม UNIQUE คู่ booking/equipment เพราะกระทบการแทนที่รายการของ service
+
+[data.sql ของสมาชิกคนที่ 4](code/src/main/resources/db/nuttachai_673380581-8_04/data.sql) และ [fixture สำหรับ SQL tests](code/src/test/resources/db/nuttachai_673380581-8_04/data.sql) เป็นข้อมูล fixture สำหรับฐานข้อมูลทดสอบแยกเท่านั้น ไม่ต้องรันเพื่อ deploy จริง และไม่สร้าง parent rows หรือสมมติ IDs หากไม่พบ parent fixtures ที่ตรงเงื่อนไขจะไม่เพิ่มแถว ไม่มี Flyway/Liquibase ที่รัน migration ให้อัตโนมัติ
 
 ## Installation & Setup
 
@@ -164,7 +163,8 @@ erDiagram
 
 - JDK 17 และตั้ง `JAVA_HOME`/`PATH` ให้ Terminal เรียก `java` กับ `javac` ได้
 - Git และอินเทอร์เน็ตสำหรับดาวน์โหลด Maven/dependencies ครั้งแรก ไม่ต้องติดตั้ง Maven แยก
-- PostgreSQL เฉพาะกรณีจะรันโหมด API; เว็บทดลอง `local` ใช้ H2 ได้ทันที
+- PostgreSQL หรือ Aiven for PostgreSQL พร้อมสิทธิ์เตรียม schema; เว็บและ API ต้องมี `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
+- PostgreSQL client (`psql`) สำหรับรัน full-schema bootstrap และบัญชี Railway สำหรับขั้นตอน deployment
 
 Clone repository แล้วเข้าโฟลเดอร์ที่มี `pom.xml`:
 
@@ -190,80 +190,47 @@ mvnw.cmd --version
 
 ## How to Run
 
-### 1. เว็บ Thymeleaf บนเครื่อง: profile `local`
+### เว็บ production: profile `prod`
 
-PowerShell:
+ค่าเริ่มต้นคือ `prod` ซึ่งรวม `web,postgres` ใช้ Thymeleaf, session, role guards และ CSRF กับ PostgreSQL; profile `local`/`local-postgres` และ H2 แบบไฟล์ไม่ได้ใช้ใน runtime แล้ว
+
+| Environment | ค่าที่ต้องเตรียม |
+| --- | --- |
+| `DB_URL` | JDBC URL ของ Aiven เช่น `jdbc:postgresql://YOUR_AIVEN_HOST:YOUR_AIVEN_PORT/YOUR_DATABASE?sslmode=require` |
+| `DB_USERNAME` | ผู้ใช้ฐานข้อมูลจาก Aiven |
+| `DB_PASSWORD` | รหัสผ่านฐานข้อมูล ตั้งผ่าน environment/Variables ของ service |
+| `PORT` | Railway กำหนดให้; หากไม่กำหนดใช้ 8080 |
+| `SPRING_PROFILES_ACTIVE` | ไม่จำเป็นเมื่อใช้ค่าเริ่มต้น; ตั้ง `prod` ได้เพื่อระบุชัดเจน |
+
+ไม่มี fallback ไปฐานข้อมูล localhost เมื่อไม่ตั้งค่า DB แอปจะเริ่มไม่ได้ ให้เตรียม full schema ก่อนเริ่มเว็บ แอปรับที่ `0.0.0.0` และใช้ secure/HttpOnly/SameSite=Lax session cookie พร้อมรองรับ forwarded headers จาก proxy จึงต้องเข้าเว็บผ่าน HTTPS เพื่อใช้ login/session
+
+เมื่อกำหนด environment และเตรียมฐานข้อมูลแล้ว รันจาก `code/`:
 
 ```powershell
-.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local"
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=prod"
 ```
-
-CMD:
-
-```bat
-mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local"
-```
-
-macOS/Linux:
 
 ```sh
-sh ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+sh ./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
-เปิด [http://127.0.0.1:8080/](http://127.0.0.1:8080/) หลังแอปเริ่มสำเร็จ กด Ctrl+C ใน Terminal เพื่อหยุด เว็บ bind ที่ `127.0.0.1` จึงเปิดจากเครื่องที่รันแอปเท่านั้น
+เว็บ production ไม่มี demo accounts, rooms หรือ equipment สมัครผ่าน `/register` จะได้ role `USER` การเตรียม ADMIN คนแรกทำโดยผู้ดูแลผ่าน DB console หลังตรวจบัญชีเป้าหมายตาม [HOWTORUN.md](HOWTORUN.md) จากนั้นใช้ `/admin` จัดการห้อง อุปกรณ์และผู้ใช้
 
-| Username | Password ทดลอง | Role |
-| --- | --- | --- |
-| `narin` | `local123` | USER |
-| `staff` | `local123` | STAFF |
-| `admin` | `local123` | ADMIN |
+ดูขั้นตอน [เตรียม Aiven, SSL, Railway และ Docker Compose](HOWTORUN.md) โดย Compose ใช้ PostgreSQL ภายนอกผ่าน environment ไม่สร้าง PostgreSQL service หรือ H2 ให้เอง
 
-Seeder สร้างบัญชี 3 roles, ห้อง 6 ห้อง และอุปกรณ์ 6 รายการ **เฉพาะเมื่อทั้งตาราง users, meeting_rooms และ equipment ว่างพร้อมกัน** ไม่คืนบัญชีหรือรหัสผ่านที่ถูกเปลี่ยนไปแล้ว H2 เก็บข้อมูลที่ `code/.local-data/room-booking.mv.db` เมื่อรันจาก `code/` และข้อมูลนี้ถูก Git ignore
+### โหมด API แยก: profile `api`
 
-หน้าหลัก: `/`, `/rooms`, `/equipment`, `/login`, `/register`, `/account`, `/bookings` และ `/admin` ตามสิทธิ์บัญชี ใน profile นี้ `/api/**` ถูกปิด และ Swagger/OpenAPI ถูกปิดใน `application-local.properties`
-
-หากเปลี่ยน port ใน PowerShell:
+`api` รวม `postgres` และใช้ DB environment/schema เดียวกัน ใช้สำหรับ API integration/testing ของ backend โดยไม่เปิด Thymeleaf web controllers:
 
 ```powershell
-.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local" "-Dspring-boot.run.arguments=--server.port=8081"
-```
-
-CMD ใช้ argument เดียวกัน แต่เริ่มด้วย `mvnw.cmd` เปิด Terminal ที่ไม่มี `SPRING_DATASOURCE_*` ตั้งค้างจากการทดลอง PostgreSQL เพราะ environment variables สามารถ override datasource ของ local ได้ คู่มือเปิดเว็บและแก้ปัญหาเพิ่มเติมอยู่ที่ [HOWTORUN.md](HOWTORUN.md)
-
-### 2. Backend REST API กับ PostgreSQL: profile `api`
-
-`api` ใช้เป็นชื่อ profile ที่ไม่ใช่ `local` จึงเลือก configuration PostgreSQL ใน `application.properties` และ SecurityConfig ฝั่ง API ปัจจุบันไม่มี `application-api.properties` และไม่มี Thymeleaf web controllers ในโหมดนี้
-
-สร้างฐานข้อมูล `room_booking` ใน PostgreSQL ก่อน และเตรียม host/port, username, password และสิทธิ์ของบัญชีที่ใช้เชื่อมต่อ เปลี่ยน placeholders ในตัวอย่างให้เป็นข้อมูลของเครื่องตนเอง:
-
-PowerShell:
-
-```powershell
-$env:DB_URL = 'jdbc:postgresql://localhost:5432/room_booking'
-$env:DB_USERNAME = 'postgres'
-$env:DB_PASSWORD = '<your-postgresql-password>'
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=api"
 ```
 
-CMD:
-
-```bat
-set "DB_URL=jdbc:postgresql://localhost:5432/room_booking"
-set "DB_USERNAME=postgres"
-set "DB_PASSWORD=<your-postgresql-password>"
-mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=api"
-```
-
-ใช้ค่าความลับบนเครื่อง/ระบบ environment และไม่ commit credentials จริง บัญชี demo ของ local จะไม่ถูก seed ใน profile นี้ แอปยัง bind `127.0.0.1`; ขั้นตอนนี้เป็นการรัน API บนเครื่อง ไม่ใช่ public deployment การจัดทำ README ไม่ได้เชื่อมต่อหรือยืนยัน PostgreSQL runtime
+การยืนยันตัวตนของ API ยังเป็น contract เดิมตามหัวข้อถัดไป ไม่ควรเปิด API service นี้เป็น production สาธารณะโดยอ้างว่ามี authentication สมบูรณ์ ส่วนเว็บ `prod` ปิด `/api/**` ด้วย HTTP 403
 
 ## API Documentation
 
-เมื่อรัน profile ที่ไม่ใช่ `local` และแอปเริ่มสำเร็จ สามารถตรวจ:
-
-- Swagger UI: [http://127.0.0.1:8080/swagger-ui.html](http://127.0.0.1:8080/swagger-ui.html)
-- OpenAPI JSON: [http://127.0.0.1:8080/v3/api-docs](http://127.0.0.1:8080/v3/api-docs)
-
-URLs นี้เป็นตำแหน่งที่ configuration รองรับ ยังไม่ได้ยืนยันการเข้าถึงผ่าน PostgreSQL runtime ในรอบนี้ และใช้ไม่ได้ใน default `local`
+เมื่อเลือก profile `api` สามารถตรวจ `/swagger-ui.html` และ `/v3/api-docs` บน URL ของ service ที่ตนรันได้ เว็บ `prod` ปิด API และ Swagger/OpenAPI; รายการ endpoints ต่อไปนี้อธิบาย backend contract สำหรับ integration/testing ไม่ใช่ public API ที่ยืนยัน deployment แล้ว
 
 | Method | Endpoint | หน้าที่ / success status |
 | --- | --- | --- |
@@ -309,45 +276,31 @@ POST/PUT/PATCH ของ bookings ใช้ header `X-User-Id` เป็น ID �
 
 Global Exception Handler คืน `ErrorResponse` ที่มี `timestamp`, `status`, `error`, `message`, `path`, `details` สำหรับ validation/not found/conflict/server errors ส่วน header interceptor ยังมี error JSON แบบ `error`/`message` แยกต่างหาก
 
-Authentication ฝั่ง REST ยังไม่สมบูรณ์: `X-User-Id` เป็นค่าที่ client ส่งเอง และ Swagger ประกาศ bearer JWT โดยยังไม่มี JWT validation จริง จึงไม่ควรอ้างว่า API นี้พร้อมเปิดสาธารณะหรือใช้ปุ่ม Authorize เป็นการ login สำเร็จ
+Authentication ฝั่ง REST ยังเป็น contract เดิม: `api` ใช้ `permitAll` และ booking รับ `X-User-Id` ที่ client ส่งเอง โดยไม่มี Basic/JWT validation จริง ใช้สำหรับ integration/testing ในขอบเขตที่ควบคุมการเข้าถึงเท่านั้น เว็บ `prod` ปิด `/api/**` จึงไม่ใช้ header นี้ข้าม session/role/CSRF guards
 
 ## How to Run Tests
 
-รันจาก `code/` โดยใช้ profile `local` และใส่เครื่องหมายคำพูดรอบ `-D...` ใน PowerShell
+รันจาก `code/` โดยใช้ test configuration ใน `src/test/resources` ซึ่งกำหนด H2 in-memory แยกจาก PostgreSQL/Aiven ไม่ต้องเตรียม cloud DB เพื่อรันชุดนี้ และไม่ต้องใส่ profile runtime `prod` หรือ `api` เพิ่มเอง
 
-### ชุดเดิมที่ Maven ตรวจพบ
-
-PowerShell:
+### ชุดรวมที่ Maven ตรวจพบ
 
 ```powershell
-.\mvnw.cmd test "-Dspring.profiles.active=local"
+.\mvnw.cmd test
 ```
 
-CMD:
-
-```bat
-mvnw.cmd test "-Dspring.profiles.active=local"
+```sh
+sh ./mvnw test
 ```
 
-ใช้ test sources ใน `code/src/test/java` และรายงานอยู่ที่ `code/target/surefire-reports/` มี tests ของ controllers, authentication, profile security, local migration, application context และ HTTP integration ของเว็บ ซึ่ง integration tests กำหนด H2 in-memory
+คำสั่งปกติรวม tests จาก `code/src/test/java` และ `test/{branch}/java` ของ `nuttachai_673380581-8_04`, `krittitee_673380572-9_04` และ `jiraphat_673380577-9_03` ผ่าน build-helper รายงานอยู่ที่ `code/target/surefire-reports/`
 
 ### ชุดเฉพาะสมาชิกคนที่ 4
 
-PowerShell:
-
 ```powershell
-.\mvnw.cmd -Pperson4-tests test "-Dspring.profiles.active=local"
+.\mvnw.cmd -Pnuttachai_673380581-8_04 test
 ```
 
-CMD:
-
-```bat
-mvnw.cmd -Pperson4-tests test "-Dspring.profiles.active=local"
-```
-
-Profile `person4-tests` ใช้ sources จาก repository root `test/person4/java`, แยก test classes ไป `code/target/person4-test-classes/` และแยกรายงานไป `code/target/person4-surefire-reports/` ครอบคลุม validation/chain, Booking DTO/Mapper และข้อกำหนดตารางเชื่อมในขอบเขตคนที่ 4 ไม่แทนที่ชุดเดิม
-
-ผลตรวจวันที่ 2026-10-07: ชุดสมาชิกคนที่ 4 ผ่าน 40 tests และชุดเดิมผ่าน 67 tests ทั้งสองชุดมี 0 failures, 0 errors และ 0 skipped ทดสอบด้วย H2/Mockito โดยไม่ได้เชื่อม PostgreSQL จริง
+Profile นี้ใช้ `test/nuttachai_673380581-8_04/java` แยก test classes ไป `code/target/nuttachai_673380581-8_04-test-classes/` และรายงานไป `code/target/nuttachai_673380581-8_04-surefire-reports/` โดยไม่เพิ่ม test sources ของสมาชิกอื่น
 
 | Test class | ขอบเขต |
 | --- | --- |
@@ -356,21 +309,23 @@ Profile `person4-tests` ใช้ sources จาก repository root `test/person
 | `BookingMapperTest` | การแปลง Booking request/entity/response |
 | `BookingEquipmentRepositoryTest` | Entity/repository และข้อจำกัดตารางเชื่อมด้วย H2 |
 | `BookingEquipmentSqlTest` | Manual schema/data scripts ด้วย H2 |
+| `PostgresqlSchemaTest` | Full-schema bootstrap, FK/check/nullability, การรันซ้ำและ JPA schema validation |
 
-ไฟล์ใน `code/src/test/Tanny test/` มี 23 tests ของ Room/Equipment/Strategy แต่ไม่ได้อยู่ใน test source path ที่ Maven ตรวจพบตามปกติ และไม่ได้รวมใน profile คนที่ 4 จำนวน tests ที่ผ่านต้องอ้างอิงรายงานของแต่ละชุด ไม่ใช่นับรวมไฟล์ทดสอบที่ยังไม่ถูกเรียกใช้งาน การทดสอบ H2/Mockito ไม่ยืนยัน PostgreSQL หรือ Cloud Deployment
+จำนวน tests และผลผ่านให้อ้างอิง Surefire reports จากการรันล่าสุด การทดสอบด้วย H2/Mockito ไม่ยืนยันการเชื่อม Aiven หรือการเปิดเว็บบน Railway
 
 ## Deployment URL
 
-**ยังไม่มี URL สาธารณะที่ยืนยันว่าใช้งานได้** URL `http://127.0.0.1:8080/` เป็นเว็บบนเครื่องเท่านั้น ข้อกำหนด Cloud/Server Deployment ของใบงานจึงยังไม่เสร็จ
+ยังไม่มี public URL ที่ยืนยันจาก deployment ในเอกสารนี้ หลัง deploy และตรวจ login/roles/CSRF/การบันทึก booking บน Railway จริงแล้ว จึงบันทึก URL และผลตรวจ ขั้นตอนอยู่ใน [HOWTORUN.md](HOWTORUN.md)
 
-มี `code/Dockerfile` และ `code/docker-compose.yml` แต่ยังไม่เสนอเป็นคำสั่งรันที่พร้อมใช้งาน: Compose ตั้ง PostgreSQL ขณะที่ default profile ยังเป็น local/H2 และ server bind loopback รวมถึง writable directory ของ H2 ใน container ต้องจัดการให้สอดคล้องกัน ต้องปรับ profile, datasource, binding, secrets และ authentication พร้อมทดสอบ deployment ก่อนบันทึก public URL จริง
+Railway ใช้ Root Directory `code`, Dockerfile build และ Variables ของ Aiven; ให้ Generate Domain เพื่อเข้าผ่าน HTTPS แอปไม่สร้าง schema หรือ seed demo data ระหว่าง startup
+
+GitHub Actions ปัจจุบันมี build/test และ Render Deploy Hooks ของทีม การเตรียม profile `prod` ไม่ได้เปลี่ยน workflow นี้เป็น Railway deploy อัตโนมัติ ต้องตั้ง Railway service แยกให้ใช้โค้ดเวอร์ชันที่ทีมเลือก ไม่มีคำสั่ง commit/push อัตโนมัติในคู่มือนี้
 
 ## Project Structure
 
 ```text
 Co-Working-Space-Equipment-Rental/
-├── README.md
-├── HOWTORUN.md
+├── README.md / HOWTORUN.md
 ├── code/
 │   ├── pom.xml
 │   ├── mvnw / mvnw.cmd / .mvn/wrapper/
@@ -378,35 +333,30 @@ Co-Working-Space-Equipment-Rental/
 │   └── src/
 │       ├── main/
 │       │   ├── java/com/example/roombooking/
-│       │   │   ├── controller/api/           # REST controllers
-│       │   │   ├── controller/web/           # MVC, form/forms และ support
-│       │   │   ├── service/impl/             # Business services
-│       │   │   ├── service/strategy/         # STANDARD/VIP rules
-│       │   │   ├── service/validation/       # Validation chain/handlers
-│       │   │   ├── repository/               # Spring Data repositories
-│       │   │   ├── domain/entity/            # 7 JPA entities
-│       │   │   ├── domain/enums/             # Role, room/booking statuses
-│       │   │   ├── domain/state/             # Booking state handling
-│       │   │   ├── dto/request/ / dto/response/
-│       │   │   ├── mapper/ / event/
+│       │   │   ├── controller/api/ / controller/web/
+│       │   │   ├── service/impl/ / service/strategy/ / service/validation/
+│       │   │   ├── repository/ / domain/entity/ / domain/enums/ / domain/state/
+│       │   │   ├── dto/request/ / dto/response/ / mapper/ / event/
 │       │   │   └── config/ / exception/ / common/
 │       │   └── resources/
 │       │       ├── application.properties
-│       │       ├── application-local.properties
-│       │       ├── db/person4/               # Manual booking_equipment SQL
+│       │       ├── application-web.properties / application-postgres.properties
+│       │       ├── db/postgresql/schema.sql
+│       │       ├── db/nuttachai_673380581-8_04/  # Scoped manual SQL / isolated fixture
 │       │       └── templates/
 │       │           ├── account/ / admin/ / auth/ / bookings/
-│       │           ├── rooms/ / equipment/ / pages/
-│       │           ├── fragments/ / common/
+│       │           ├── rooms/ / equipment/ / pages/ / fragments/ / common/
 │       │           └── assets/css/ / assets/js/ / assets/img/
 │       └── test/
-│           ├── java/                         # Default Maven test sources
-│           └── Tanny test/                   # Existing unscanned tests
+│           ├── java/                          # Default Maven test sources / test fixtures
+│           └── resources/                     # H2 test config / SQL fixtures
 ├── test/
-│   └── person4/java/                          # Dedicated person4-tests sources
-├── doc/                                      # เอกสารและ diagrams ของทีม
-├── img/                                      # โฟลเดอร์มัลติมีเดียตามใบงาน
-└── .github/                                  # โครงสร้างงาน GitHub; ไม่ยืนยัน CI/CD จากชื่อโฟลเดอร์
+│   ├── nuttachai_673380581-8_04/java/
+│   ├── krittitee_673380572-9_04/java/
+│   └── jiraphat_673380577-9_03/java/
+├── doc/                                       # เอกสารและ diagrams ของทีม
+├── img/                                       # โฟลเดอร์มัลติมีเดียตามใบงาน
+└── .github/workflows/                         # CI/CD workflow ของทีม
 ```
 
-Assets ของเว็บปัจจุบันอยู่ใน `code/src/main/resources/templates/assets/` และถูก map เป็น `/assets/**` ด้วย `WebAssetsConfig` ไม่ได้โหลดจาก root `img/` ส่วน `doc/` และ `img/` มี placeholder เดิม จึงต้องดูไฟล์เอกสาร/diagrams ที่ส่งจริงประกอบ ไม่ถือว่าเอกสารทุกหัวข้อในใบงานเสร็จจากการมีโฟลเดอร์เพียงอย่างเดียว
+Assets ของเว็บอยู่ใน `code/src/main/resources/templates/assets/` และถูก map เป็น `/assets/**` ด้วย `WebAssetsConfig` ไม่ได้โหลดจาก root `img/` ต้องตรวจเอกสาร/diagrams และสื่อที่ส่งจริงใน `doc/` และ `img/` ตามหัวข้อของใบงาน ไม่ถือว่าเอกสารครบจากการมีโฟลเดอร์เพียงอย่างเดียว

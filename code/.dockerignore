@@ -3,3 +3,8 @@ target/
 .idea/
 .vscode/
 *.iml
+.local-data/
+.env
+.env.*
+*.pem
+*.key

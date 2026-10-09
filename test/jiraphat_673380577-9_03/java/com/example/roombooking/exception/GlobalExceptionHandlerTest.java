@@ -8,6 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.core.TypeInformation;
+import org.springframework.data.core.PropertyReferenceException;
+import com.example.roombooking.domain.entity.Booking;
+import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -124,6 +128,17 @@ class GlobalExceptionHandlerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(content().string(not(containsString("constraint"))));
+    }
+
+    @Test
+    void unknownSortProperty_returns400NotMasked500() throws Exception {
+        when(bookingService.getBookingsByRoom(eq(1L), any())).thenThrow(new PropertyReferenceException(
+                "string", TypeInformation.of(Booking.class), List.of()));
+
+        mockMvc.perform(get("/api/v1/rooms/1/bookings").param("sort", "string"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message", containsString("string")));
     }
 
     @Test

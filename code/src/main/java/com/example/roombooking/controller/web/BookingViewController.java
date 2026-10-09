@@ -61,7 +61,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Controller
-@Profile("local")
+@Profile("web")
 @RequestMapping("/bookings")
 public class BookingViewController {
     private static final String DRAFT_KEY = "bookingWizardDraft";

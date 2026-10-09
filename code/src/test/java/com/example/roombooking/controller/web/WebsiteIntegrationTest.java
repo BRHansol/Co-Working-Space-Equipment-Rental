@@ -3,10 +3,13 @@ package com.example.roombooking.controller.web;
 import com.example.roombooking.domain.enums.BookingStatus;
 import com.example.roombooking.repository.BookingRepository;
 import com.example.roombooking.repository.UserRepository;
+import com.example.roombooking.support.WebsiteTestDataConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 import java.net.*;
 import java.net.http.*;
 import java.nio.charset.StandardCharsets;
@@ -16,18 +19,24 @@ import java.util.regex.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Real HTTP requests render Thymeleaf and exercise the existing services against an isolated database. */
-// test resources ของทีมมี application.properties ของตัวเอง (H2) ซึ่งไม่มี spring.profiles.default=local
-@org.springframework.test.context.ActiveProfiles("local")
+@ActiveProfiles("web")
+@Import(WebsiteTestDataConfiguration.class)
 @SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT, properties={
         "spring.datasource.url=jdbc:h2:mem:website-integration;MODE=PostgreSQL;NON_KEYWORDS=USER;DB_CLOSE_DELAY=-1",
-        "spring.jpa.hibernate.ddl-auto=create-drop"})
-class LocalWebsiteIntegrationTest {
+        "spring.datasource.driver-class-name=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=",
+        "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect",
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.sql.init.mode=never",
+        "server.servlet.session.cookie.secure=false"})
+class WebsiteIntegrationTest {
     @Autowired Environment environment;
     @Autowired BookingRepository bookingRepository;
     @Autowired UserRepository userRepository;
     private WebClient browser() { return new WebClient("http://127.0.0.1:"+environment.getProperty("local.server.port")); }
 
-    @Test void publicPagesRenderWithLocalAssetsAndErrors() throws Exception {
+    @Test void publicPagesRenderWithWebsiteAssetsAndErrors() throws Exception {
         WebClient web=browser();
         for(String path: List.of("/","/rooms","/rooms/1","/equipment","/equipment/1","/login","/register",
                 "/rooms?q=missing&capacity=100","/equipment?category=missing")) {

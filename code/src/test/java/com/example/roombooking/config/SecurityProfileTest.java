@@ -32,32 +32,36 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /** Tests the actual security filter chain without starting the application or connecting to a database. */
 class SecurityProfileTest {
     @Test
-    void localProfileSelectsOnlySessionWebsiteSecurityAndProvidesPasswordEncoder() {
-        try (var context = securityContext("local")) {
-            assertEquals(1, context.getBeansOfType(LocalWebSecurityConfig.class).size());
+    void webProfileSelectsOnlySessionWebsiteSecurityAndProvidesPasswordEncoder() {
+        try (var context = securityContext("web")) {
+            assertEquals(1, context.getBeansOfType(WebSecurityConfig.class).size());
             assertTrue(context.getBeansOfType(SecurityConfig.class).isEmpty());
             assertTrue(context.getBeansOfType(UserIdHeaderInterceptor.class).isEmpty());
+            assertTrue(context.containsBean("webFilterChain"));
+            assertFalse(context.containsBean("filterChain"));
             PasswordEncoder encoder = context.getBean(PasswordEncoder.class);
             assertTrue(encoder.matches("test-password", encoder.encode("test-password")));
         }
     }
 
     @Test
-    void nonLocalProfileKeepsDevelopSecurityAndHeaderInterceptor() {
+    void nonWebProfileKeepsDevelopSecurityAndHeaderInterceptor() {
         try (var context = securityContext("api-test")) {
-            assertTrue(context.getBeansOfType(LocalWebSecurityConfig.class).isEmpty());
+            assertTrue(context.getBeansOfType(WebSecurityConfig.class).isEmpty());
             assertEquals(1, context.getBeansOfType(SecurityConfig.class).size());
             assertEquals(1, context.getBeansOfType(UserIdHeaderInterceptor.class).size());
+            assertFalse(context.containsBean("webFilterChain"));
+            assertTrue(context.containsBean("filterChain"));
             assertNotNull(context.getBean(PasswordEncoder.class));
             assertNotNull(context.getBean("springSecurityFilterChain"));
         }
     }
 
     @Test
-    void localLogoutWithoutCsrfReachesMvcGuardAndKeepsSession() throws Exception {
-        try (var context = securityContext("local")) {
+    void webLogoutWithoutCsrfReachesMvcGuardAndKeepsSession() throws Exception {
+        try (var context = securityContext("web")) {
             MockHttpSession session = csrfSession();
-            localMvc(context, mock(UserRepository.class)).perform(post("/logout").session(session))
+            webMvc(context, mock(UserRepository.class)).perform(post("/logout").session(session))
                     .andExpect(status().isForbidden())
                     .andExpect(view().name("common/error"));
             assertFalse(session.isInvalid());
@@ -65,8 +69,8 @@ class SecurityProfileTest {
     }
 
     @Test
-    void localLogoutWithCsrfUsesWebsiteControllerAndInvalidatesSession() throws Exception {
-        try (var context = securityContext("local")) {
+    void webLogoutWithCsrfUsesWebsiteControllerAndInvalidatesSession() throws Exception {
+        try (var context = securityContext("web")) {
             UserRepository users = mock(UserRepository.class);
             User member = new User();
             member.setId(7L);
@@ -74,7 +78,7 @@ class SecurityProfileTest {
             when(users.findById(7L)).thenReturn(Optional.of(member));
             MockHttpSession session = csrfSession();
             session.setAttribute(WebSessionSupport.USER_ID_SESSION_KEY, 7L);
-            localMvc(context, users).perform(post("/logout").session(session).param("_csrf", "test-token"))
+            webMvc(context, users).perform(post("/logout").session(session).param("_csrf", "test-token"))
                     .andExpect(status().is3xxRedirection())
                     .andExpect(redirectedUrl("/login?loggedOut"));
             assertTrue(session.isInvalid());
@@ -82,9 +86,9 @@ class SecurityProfileTest {
     }
 
     @Test
-    void localApiCannotBypassWebsiteGuardsUsingDevelopHeader() throws Exception {
-        try (var context = securityContext("local")) {
-            localMvc(context, mock(UserRepository.class))
+    void webApiCannotBypassWebsiteGuardsUsingDevelopHeader() throws Exception {
+        try (var context = securityContext("web")) {
+            webMvc(context, mock(UserRepository.class))
                     .perform(get("/api/v1/bookings").header("X-User-Id", "7"))
                     .andExpect(status().isForbidden());
         }
@@ -127,12 +131,12 @@ class SecurityProfileTest {
         AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
         context.setServletContext(new MockServletContext());
         context.getEnvironment().setActiveProfiles(profile);
-        context.register(SecurityConfig.class, LocalWebSecurityConfig.class, UserIdHeaderInterceptor.class);
+        context.register(SecurityConfig.class, WebSecurityConfig.class, UserIdHeaderInterceptor.class);
         context.refresh();
         return context;
     }
 
-    private MockMvc localMvc(AnnotationConfigWebApplicationContext context, UserRepository users) {
+    private MockMvc webMvc(AnnotationConfigWebApplicationContext context, UserRepository users) {
         WebSessionSupport sessions = new WebSessionSupport(users);
         return MockMvcBuilders.standaloneSetup(new AuthViewController(users, mock(UserService.class), sessions),
                         new ApiProbe())
@@ -151,6 +155,6 @@ class SecurityProfileTest {
     @RestController
     static class ApiProbe {
         @GetMapping("/api/v1/bookings")
-        String bookings() { return "API should be blocked in local"; }
+        String bookings() { return "API should be blocked in web"; }
     }
 }

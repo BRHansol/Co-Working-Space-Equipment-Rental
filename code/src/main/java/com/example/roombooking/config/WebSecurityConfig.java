@@ -10,13 +10,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-/** Local pages use WebSessionSupport and WebAccessInterceptor for identity, roles and CSRF. */
+/** Web pages use WebSessionSupport and WebAccessInterceptor for identity, roles and CSRF. */
 @Configuration
 @EnableWebSecurity
-@Profile("local")
-public class LocalWebSecurityConfig {
+@Profile("web")
+public class WebSecurityConfig {
     @Bean
-    public SecurityFilterChain localWebFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)

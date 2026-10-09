@@ -9,8 +9,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@Profile("local")
-public class LocalErrorController implements ErrorController {
+@Profile("web")
+public class WebErrorController implements ErrorController {
     @RequestMapping("/error")
     public String error(HttpServletRequest request, Model model) {
         Object code = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);

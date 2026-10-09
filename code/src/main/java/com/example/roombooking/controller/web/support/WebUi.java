@@ -9,9 +9,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.Locale;
 
-/** Presentation helpers shared by the server-rendered local website. */
+/** Presentation helpers shared by the server-rendered website. */
 @Component("webUi")
-@Profile("local")
+@Profile("web")
 public class WebUi {
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.forLanguageTag("th-TH"))
             .withChronology(ThaiBuddhistChronology.INSTANCE);

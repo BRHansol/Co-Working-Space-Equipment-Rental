@@ -13,14 +13,14 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-/** Errors raised before a controller is selected need unscoped local advice. */
+/** Errors raised before a controller is selected need unscoped web advice. */
 @ControllerAdvice
-@Profile("local")
+@Profile("web")
 @Order(Ordered.HIGHEST_PRECEDENCE)
-public class LocalHttpErrorAdvice {
+public class WebHttpErrorAdvice {
     private final WebSessionSupport sessions;
     private final WebUi ui;
-    public LocalHttpErrorAdvice(WebSessionSupport sessions,WebUi ui) { this.sessions=sessions; this.ui=ui; }
+    public WebHttpErrorAdvice(WebSessionSupport sessions,WebUi ui) { this.sessions=sessions; this.ui=ui; }
     @ExceptionHandler(NoResourceFoundException.class)
     public ModelAndView missing(HttpServletRequest request,HttpServletResponse response) {
         return errorPage(404,"ไม่พบหน้าที่ต้องการ","หน้านี้อาจถูกย้าย หรือไม่มีอยู่ในเว็บไซต์",request,response);

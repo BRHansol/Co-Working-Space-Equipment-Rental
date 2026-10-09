@@ -1,4 +1,4 @@
-package com.example.roombooking.config;
+package com.example.roombooking.support;
 
 import com.example.roombooking.controller.web.support.WebSessionSupport;
 import com.example.roombooking.domain.entity.Equipment;
@@ -12,22 +12,21 @@ import com.example.roombooking.repository.MeetingRoomRepository;
 import com.example.roombooking.repository.UserRepository;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 
-@Component
-@Profile("local & !postgres")
-public class LocalDemoDataSeeder implements ApplicationRunner {
+/** Fixtures imported only by website integration tests; never packaged with the application. */
+@TestConfiguration(proxyBeanMethods = false)
+public class WebsiteTestDataConfiguration implements ApplicationRunner {
     private final UserRepository users;
     private final MeetingRoomRepository rooms;
     private final EquipmentRepository equipment;
     private final WebSessionSupport sessions;
 
-    public LocalDemoDataSeeder(UserRepository users, MeetingRoomRepository rooms,
+    public WebsiteTestDataConfiguration(UserRepository users, MeetingRoomRepository rooms,
                                EquipmentRepository equipment, WebSessionSupport sessions) {
         this.users = users;
         this.rooms = rooms;

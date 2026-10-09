@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Locale;
 
 @Controller
-@Profile("local")
+@Profile("web")
 public class AuthViewController {
     private final UserRepository users;
     private final UserService userService;

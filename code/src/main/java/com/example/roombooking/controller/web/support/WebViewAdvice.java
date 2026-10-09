@@ -25,7 +25,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 @ControllerAdvice(basePackages = "com.example.roombooking.controller.web")
-@Profile("local")
+@Profile("web")
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class WebViewAdvice {
     private static final Logger log = LoggerFactory.getLogger(WebViewAdvice.class);

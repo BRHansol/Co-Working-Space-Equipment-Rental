@@ -27,7 +27,7 @@ import java.time.*;
 import java.util.*;
 
 @Controller
-@Profile("local")
+@Profile("web")
 @RequestMapping("/admin")
 public class AdminViewController {
     private static final Logger LOG=LoggerFactory.getLogger(AdminViewController.class);
@@ -214,7 +214,7 @@ public class AdminViewController {
                 || ex instanceof IllegalArgumentException) {
             return ex.getMessage()==null ? "กรุณาตรวจข้อมูลแล้วลองใหม่" : ex.getMessage();
         }
-        LOG.error("Local admin action failed",ex);
+        LOG.error("Web admin action failed",ex);
         return "ดำเนินการไม่สำเร็จ กรุณาตรวจข้อมูลแล้วลองใหม่";
     }
 }

@@ -15,7 +15,7 @@ import java.security.MessageDigest;
 import java.util.UUID;
 
 @Component
-@Profile("local")
+@Profile("web")
 public class WebSessionSupport {
     public static final String USER_ID_SESSION_KEY = "authenticatedUserId";
     public static final String CSRF_SESSION_KEY = "webCsrfToken";

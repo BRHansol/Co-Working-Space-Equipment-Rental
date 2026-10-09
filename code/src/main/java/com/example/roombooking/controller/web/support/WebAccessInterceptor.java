@@ -10,7 +10,7 @@ import java.util.Set;
 import org.springframework.web.util.UrlPathHelper;
 
 @Component
-@Profile("local")
+@Profile("web")
 public class WebAccessInterceptor implements HandlerInterceptor {
     private static final Set<String> SAFE_METHODS = Set.of("GET", "HEAD", "OPTIONS");
     private final WebSessionSupport sessions;
@@ -25,7 +25,7 @@ public class WebAccessInterceptor implements HandlerInterceptor {
         String path = UrlPathHelper.defaultInstance.getPathWithinApplication(request);
         if (path.equals("/api") || path.startsWith("/api/")) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN,
-                    "Local website access uses the authenticated web pages.");
+                    "Website access uses the authenticated web pages.");
             return false;
         }
         if (!SAFE_METHODS.contains(request.getMethod()) && !sessions.hasValidCsrfToken(request)) {

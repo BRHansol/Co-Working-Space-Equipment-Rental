@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-@Profile("local")
+@Profile("web")
 public class WebAssetsConfig implements WebMvcConfigurer {
     private final WebAccessInterceptor access;
 

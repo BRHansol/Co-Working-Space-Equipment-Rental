@@ -14,7 +14,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableWebSecurity
-@Profile("!local")
+@Profile("!web")
 public class SecurityConfig implements WebMvcConfigurer {
 
     private final UserIdHeaderInterceptor userIdHeaderInterceptor;

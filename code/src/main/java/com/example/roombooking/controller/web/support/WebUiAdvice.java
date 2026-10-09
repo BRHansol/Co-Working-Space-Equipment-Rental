@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 @ControllerAdvice(basePackages = "com.example.roombooking.controller.web")
-@Profile("local")
+@Profile("web")
 public class WebUiAdvice {
     private final WebUi ui;
     public WebUiAdvice(WebUi ui) { this.ui = ui; }

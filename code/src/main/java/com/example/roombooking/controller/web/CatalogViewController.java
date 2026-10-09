@@ -18,7 +18,7 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 
 @Controller
-@Profile("local")
+@Profile("web")
 public class CatalogViewController {
     private final RoomService rooms;
     private final EquipmentService equipment;

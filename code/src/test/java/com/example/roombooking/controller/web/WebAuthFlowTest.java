@@ -151,7 +151,7 @@ class WebAuthFlowTest {
     }
 
     @Test
-    void rawApiCannotBypassLocalWebGuards() throws Exception {
+    void rawApiCannotBypassWebGuards() throws Exception {
         mvc.perform(get("/api/v1/users")).andExpect(status().isForbidden());
         verifyNoInteractions(users, userService);
     }
