@@ -10,13 +10,13 @@ Component Diagram นี้แสดงตำแหน่งงานของ�
 flowchart TB
     Client["ผู้ใช้เว็บ / ผู้เรียก REST API"]
 
-    subgraph App["Spring Boot: com.example.roombooking"]
+    subgraph App["Spring Boot Application"]
         Web["BookingViewController<br/>Thymeleaf + Web Form"]
         API["BookingController<br/>REST API"]
         Request["BookingCreateRequest<br/>คนที่ 4: Request DTO"]
         Service["BookingService / BookingServiceImpl<br/>คนที่ 3: Booking Core"]
 
-        subgraph Member4["Booking Validation และ Equipment Linking — คนที่ 4"]
+        subgraph Member4["งานคนที่ 4"]
             Chain["BookingValidationChain<br/>BookingValidationContext"]
             Handlers["UserPermissionHandler → RoomAvailabilityHandler<br/>→ TimeOverlapHandler → EquipmentAvailabilityHandler"]
             Mapper["BookingMapper"]
@@ -33,18 +33,17 @@ flowchart TB
 
     Client --> Web
     Client --> API
-    Web -->|แปลงข้อมูลฟอร์ม| Request
-    API -->|รับ JSON พร้อม Bean Validation| Request
-    Request --> Service
+    Web --> Service
+    API --> Service
+    Web -.->|แปลงข้อมูลฟอร์ม| Request
+    API -.->|รับ JSON พร้อม Bean Validation| Request
     Service -->|validate ก่อนสร้างหรือแก้ไข| Chain
     Chain -->|เรียกตามลำดับ Order| Handlers
-    Handlers -->|อ่านผู้ใช้ ห้อง และรายการจอง| OtherRepos
+    Handlers -->|อ่านห้อง อุปกรณ์ และรายการจอง| OtherRepos
     Handlers -->|ตรวจจำนวนอุปกรณ์คงเหลือ| LinkRepo
     Service -->|toEntity / updateEntity / toResponse| Mapper
     Service -->|attachEquipment หลังตรวจผ่าน| Link
     Mapper -->|แปลงผลพร้อมรายการอุปกรณ์| Response
-    Response --> Web
-    Response --> API
     Service -->|save Booking และ cascade รายการอุปกรณ์| OtherRepos
     Link -->|mapping ของ join table| JPA
     OtherRepos --> JPA
@@ -65,16 +64,16 @@ flowchart TB
 flowchart LR
     Browser["เครื่องผู้ใช้<br/>Browser"]
 
-    subgraph Railway["Railway — เป้าหมายสำหรับ Web Application"]
+    subgraph Railway["Railway"]
         Edge["Public HTTPS endpoint / Proxy"]
-        subgraph Container["Application Container — Java 17"]
+        subgraph Container["Java 17 Container"]
             Boot["Spring Boot app.jar<br/>profile prod = web + postgres<br/>0.0.0.0 : PORT"]
             Module["Booking Validation + DTO + Mapper<br/>BookingEquipment + Repository<br/>ส่วนของคนที่ 4"]
         end
         Vars["Environment Variables<br/>DB_URL / DB_USERNAME / DB_PASSWORD<br/>PORT / SPRING_PROFILES_ACTIVE"]
     end
 
-    subgraph Aiven["Aiven — เป้าหมายสำหรับ Cloud Database"]
+    subgraph Aiven["Aiven (Cloud DB)"]
         PG[("PostgreSQL<br/>bookings / equipment / booking_equipment<br/>และตารางของสมาชิกอื่น")]
     end
 
