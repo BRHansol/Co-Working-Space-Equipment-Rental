@@ -20,6 +20,25 @@
 
 ไฟล์ Markdown มีภาพ Mermaid ซึ่งเปิดดูได้บน GitHub หรือโปรแกรมที่รองรับ Mermaid ส่วน Use Case มี [ต้นฉบับ PlantUML](01-use-cases.puml) เพิ่มเติมสำหรับสัญลักษณ์ UML ของ Actor, Use Case, `include` และ `extend`
 
+## ภาพ PNG พร้อมเปิดดู
+
+ภาพเหล่านี้ export จากต้นฉบับ Mermaid ในเอกสารข้างต้น หากแก้ต้นฉบับควร export ภาพที่เกี่ยวข้องใหม่ด้วย ภาพ PNG ของ Use Case ใช้รูปแบบแสดงผลของ Mermaid ส่วนสัญลักษณ์ UML โดยตรงอยู่ในไฟล์ PlantUML
+
+| ภาพ | ไฟล์ |
+| --- | --- |
+| Use Cases | [01-use-cases.png](png/01-use-cases.png) |
+| Domain Model | [02-domain-model.png](png/02-domain-model.png) |
+| Class: Chain of Responsibility | [03-class-validation-chain.png](png/03-class-validation-chain.png) |
+| Class: DTO / Mapper / Equipment Linking | [04-class-dto-mapper-linking.png](png/04-class-dto-mapper-linking.png) |
+| Sequence: สร้างการจองสำเร็จ | [05-sequence-create-booking.png](png/05-sequence-create-booking.png) |
+| Sequence: แก้ไขการจองสำเร็จ | [06-sequence-update-booking.png](png/06-sequence-update-booking.png) |
+| Sequence: อุปกรณ์ไม่พอ | [07-sequence-equipment-unavailable.png](png/07-sequence-equipment-unavailable.png) |
+| Activity: ตรวจเงื่อนไขการจอง | [08-validation-activity.png](png/08-validation-activity.png) |
+| ER: Equipment Linking | [09-er-equipment-linking.png](png/09-er-equipment-linking.png) |
+| Component | [10-component.png](png/10-component.png) |
+| Deployment: สถาปัตยกรรมเป้าหมาย | [11-deployment-target.png](png/11-deployment-target.png) |
+| Booking State | [12-booking-state.png](png/12-booking-state.png) |
+
 ## จุดสำคัญที่ภาพยึดจากโค้ด
 
 - Chain ใช้ `List<BookingValidationHandler>` ที่ Spring เรียงตาม `@Order` เป็น **สิทธิ์ผู้ใช้ → สถานะห้อง → เวลาซ้อนทับ → จำนวนอุปกรณ์** การโยน exception หยุดการตรวจทันที
