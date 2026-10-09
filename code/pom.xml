@@ -29,6 +29,9 @@
     </scm>
     <properties>
         <java.version>17</java.version>
+        <roombooking.testSourceDirectory>${project.basedir}/src/test/java</roombooking.testSourceDirectory>
+        <roombooking.testOutputDirectory>${project.build.directory}/test-classes</roombooking.testOutputDirectory>
+        <roombooking.skipMemberTestSources>false</roombooking.skipMemberTestSources>
     </properties>
     <dependencies>
         <dependency>
@@ -102,12 +105,97 @@
     </dependencies>
     
     <build>
+        <testSourceDirectory>${roombooking.testSourceDirectory}</testSourceDirectory>
+        <testOutputDirectory>${roombooking.testOutputDirectory}</testOutputDirectory>
         <plugins>
+            <!-- JDK 23 ขึ้นไปไม่รัน annotation processor ให้อัตโนมัติแล้ว ต้องระบุ Lombok ตรงนี้
+                 ไม่งั้น getter/setter/builder/log ที่ Lombok สร้างจะหายและคอมไพล์ไม่ผ่าน -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <!-- test ของแต่ละคนอยู่ใน test/<branch>/java ที่ root ของ repo
+                 เพิ่มเป็น test source เพื่อให้ mvn test คำสั่งเดียว (และ CI) รันครบทุกคน -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-member-tests</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <skipAddTestSource>${roombooking.skipMemberTestSources}</skipAddTestSource>
+                            <sources>
+                                <source>${project.basedir}/../test/nuttachai_673380581-8_04/java</source>
+                                <source>${project.basedir}/../test/krittitee_673380572-9_04/java</source>
+                                <source>${project.basedir}/../test/jiraphat_673380577-9_03/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Tests owned by nuttachai_673380581-8_04 live under the repository's required test/ folder.
+             Skip shared test sources and use separate output/report folders for this member's suite. -->
+        <profile>
+            <id>nuttachai_673380581-8_04</id>
+            <properties>
+                <roombooking.testSourceDirectory>${project.basedir}/../test/nuttachai_673380581-8_04/java</roombooking.testSourceDirectory>
+                <roombooking.testOutputDirectory>${project.build.directory}/nuttachai_673380581-8_04-test-classes</roombooking.testOutputDirectory>
+                <roombooking.skipMemberTestSources>true</roombooking.skipMemberTestSources>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <reportsDirectory>${project.build.directory}/nuttachai_673380581-8_04-surefire-reports</reportsDirectory>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- Tests owned by krittitee_673380572-9_04 (Room / Equipment / booking rule Strategy).
+             Run with: ./mvnw test -P krittitee_673380572-9_04 -->
+        <profile>
+            <id>krittitee_673380572-9_04</id>
+            <properties>
+                <roombooking.testSourceDirectory>${project.basedir}/../test/krittitee_673380572-9_04/java</roombooking.testSourceDirectory>
+                <roombooking.testOutputDirectory>${project.build.directory}/krittitee_673380572-9_04-test-classes</roombooking.testOutputDirectory>
+                <roombooking.skipMemberTestSources>true</roombooking.skipMemberTestSources>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <reportsDirectory>${project.build.directory}/krittitee_673380572-9_04-surefire-reports</reportsDirectory>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

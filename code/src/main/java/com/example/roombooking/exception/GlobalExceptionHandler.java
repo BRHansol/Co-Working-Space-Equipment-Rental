@@ -4,6 +4,7 @@ import com.example.roombooking.dto.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,9 @@ import java.util.stream.Collectors;
 
 // รวมจุดจัดการ Exception ทั้งหมดของ API ไว้ที่เดียว
 // ทุก endpoint จะได้ error response ที่หน้าตาเหมือนกันหมด (ตาม ErrorResponse)
-@RestControllerAdvice
+// จำกัดไว้เฉพาะ REST controller ใน controller.api
+// หน้า Thymeleaf (controller.web) จะได้ไม่โดนตอบกลับเป็น JSON ตอนเกิด error
+@RestControllerAdvice(basePackages = "com.example.roombooking.controller.api")
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
@@ -61,6 +64,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex, HttpServletRequest request) {
         log.warn("Conflict: {}", ex.getMessage());
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request, null);
+    }
+
+    // 409 - ฐานข้อมูลปฏิเสธเพราะผิด constraint (เช่น ลบ user ที่ยังมี booking อ้างอิงอยู่, ข้อมูลซ้ำ unique)
+    // ไม่ส่งข้อความจาก DB กลับไป เพราะมีชื่อตาราง/constraint ภายใน
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex,
+                                                              HttpServletRequest request) {
+        log.warn("Data integrity violation: {}", ex.getMostSpecificCause().getMessage());
+        return buildResponse(HttpStatus.CONFLICT,
+                "ไม่สามารถทำรายการได้ เพราะข้อมูลนี้ยังถูกใช้งานอยู่หรือซ้ำกับข้อมูลเดิม", request, null);
     }
 
     // 403 - ผู้ใช้ไม่มีสิทธิ์ทำรายการนี้ (เช่นไม่ใช่เจ้าของ booking / ไม่ใช่ admin)

@@ -16,6 +16,8 @@ import java.util.regex.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Real HTTP requests render Thymeleaf and exercise the existing services against an isolated database. */
+// test resources ของทีมมี application.properties ของตัวเอง (H2) ซึ่งไม่มี spring.profiles.default=local
+@org.springframework.test.context.ActiveProfiles("local")
 @SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT, properties={
         "spring.datasource.url=jdbc:h2:mem:website-integration;MODE=PostgreSQL;NON_KEYWORDS=USER;DB_CLOSE_DELAY=-1",
         "spring.jpa.hibernate.ddl-auto=create-drop"})
