@@ -145,6 +145,7 @@
                                 <source>${project.basedir}/../test/nuttachai_673380581-8_04/java</source>
                                 <source>${project.basedir}/../test/krittitee_673380572-9_04/java</source>
                                 <source>${project.basedir}/../test/jiraphat_673380577-9_03/java</source>
+                                <source>${project.basedir}/../test/boonyapaween_673380588-4_03/java</source>
                             </sources>
                         </configuration>
                     </execution>
