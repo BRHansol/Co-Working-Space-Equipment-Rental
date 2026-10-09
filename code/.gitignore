@@ -34,3 +34,7 @@ build/
 
 ### Environment variables ###
 .env
+
+
+# Local-only H2 data stays on this computer.
+.local-data/
