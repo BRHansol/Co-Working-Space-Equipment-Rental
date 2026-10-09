@@ -1,6 +1,7 @@
 # CI/CD: Build -> Test -> Deploy (Render)
 # - ทุก push / pull request เข้า main หรือ develop: build แล้วรัน test
-# - push เข้า main หรือ develop และ test ผ่านหมด: สั่ง Render deploy ผ่าน Deploy Hook
+# - push เข้า main หรือ develop และ test ผ่านหมด: สั่ง Render deploy ทั้ง 2 service ผ่าน Deploy Hook
+#   (API = SPRING_PROFILES_ACTIVE=api, หน้าเว็บ = SPRING_PROFILES_ACTIVE=local-postgres)
 # โค้ด Spring Boot อยู่ในโฟลเดอร์ code/ ทุกคำสั่ง Maven จึงรันใน code/
 
 name: CI/CD
@@ -91,14 +92,25 @@ jobs:
         working-directory: .
     steps:
       # Render จะ build Dockerfile ใหม่จาก branch ที่ตั้งไว้ใน Render
-      # RENDER_DEPLOY_HOOK_URL ตั้งใน GitHub: Settings > Secrets and variables > Actions
-      - name: Trigger Render deploy
+      # Deploy Hook ตั้งใน GitHub: Settings > Secrets and variables > Actions
+      - name: Trigger Render deploy (API)
         env:
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
-            echo "::warning::ยังไม่ได้ตั้ง secret RENDER_DEPLOY_HOOK_URL จึงข้ามการ deploy"
+          if [ -z "$HOOK_URL" ]; then
+            echo "::warning::ยังไม่ได้ตั้ง secret RENDER_DEPLOY_HOOK_URL จึงข้ามการ deploy API"
             exit 0
           fi
-          curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
-          echo "สั่ง deploy บน Render แล้ว ดูความคืบหน้าในหน้า Render Dashboard"
+          curl -fsS -X POST "$HOOK_URL"
+          echo "สั่ง deploy API บน Render แล้ว"
+
+      - name: Trigger Render deploy (Web)
+        env:
+          HOOK_URL: ${{ secrets.RENDER_WEB_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK_URL" ]; then
+            echo "::warning::ยังไม่ได้ตั้ง secret RENDER_WEB_DEPLOY_HOOK_URL จึงข้ามการ deploy หน้าเว็บ"
+            exit 0
+          fi
+          curl -fsS -X POST "$HOOK_URL"
+          echo "สั่ง deploy หน้าเว็บบน Render แล้ว"
