@@ -55,7 +55,7 @@ classDiagram
 classDiagram
     direction TB
     class BookingServiceImpl {
-        <<Context Member3>>
+        <<Client Member3>>
         +createBooking(request, requesterId) BookingResponse
         +updateBooking(id, request, requesterId) BookingResponse
         -validate(request, requester) BookingValidationContext
@@ -222,7 +222,7 @@ classDiagram
         -String category
     }
     class BookingServiceImpl {
-        <<Context Member3>>
+        <<Client Member3>>
         -attachEquipment(booking, context) void
     }
 
