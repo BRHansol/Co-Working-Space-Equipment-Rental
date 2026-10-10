@@ -8,6 +8,8 @@
 
 Repository: [BRHansol/Co-Working-Space-Equipment-Rental](https://github.com/BRHansol/Co-Working-Space-Equipment-Rental)
 
+Deployment: https://web-service-m1fz.onrender.com/
+
 ## สมาชิกกลุ่ม
 
 | ลำดับ | ชื่อ–นามสกุล | รหัสนักศึกษา | Section | Branch | หน้าที่หลัก |
@@ -127,7 +129,7 @@ Full schema สร้างทั้ง 7 ตาราง พร้อม foreig
 
 ## Installation & Setup
 
-เตรียม **JDK 17**, **Git**, PostgreSQL หรือ Aiven for PostgreSQL และ PostgreSQL client (`psql`) สำหรับสร้าง schema ใช้ Docker Desktop เมื่อต้องการรันแอปด้วย Docker
+เตรียม **JDK 17**, **Git**, **Render PostgreSQL** (หรือ PostgreSQL บนเครื่อง) และ PostgreSQL client (`psql`) สำหรับสร้าง schema ใช้ Docker Desktop เมื่อต้องการรันแอปด้วย Docker
 
 ```powershell
 git clone https://github.com/BRHansol/Co-Working-Space-Equipment-Rental.git
@@ -135,35 +137,52 @@ cd Co-Working-Space-Equipment-Rental
 git checkout develop
 ```
 
-### ตั้งค่าฐานข้อมูล
+### ตั้งค่าฐานข้อมูล (Render PostgreSQL)
 
-สร้างไฟล์ `code/.env` โดยดู [ตัวอย่าง configuration](code/.env.example) หรือกำหนดค่าผ่าน environment ของเครื่อง/บริการโฮสต์:
+1. **สร้างฐานข้อมูลบน Render:** ไปที่ [Render Dashboard](https://dashboard.render.com/) → **New +** → **PostgreSQL** (เลือก Region: `Singapore` ให้ตรงกับ Web Service)
+2. คัดลอกข้อมูลการเชื่อมต่อจากหน้า Render PostgreSQL:
+   - **Internal Database URL** สำหรับรันบน Render Web Service: รูปแบบ `jdbc:postgresql://<Internal Hostname>:5432/<Database Name>`
+   - **External Database URL** สำหรับรัน schema หรือเชื่อมต่อจากภายนอก: รูปแบบ `postgres://<User>:<Password>@<External Hostname>/<Database Name>`
+
+#### การตั้งค่าบน Render (Environment Variables ของ Web Service)
+ในหน้า Environment ของ Web Service บน Render กำหนดตัวแปร:
+
+| ตัวแปร | ตัวอย่างค่าบน Render | คำอธิบาย |
+| --- | --- | --- |
+| `DB_URL` | `jdbc:postgresql://dpg-xxxx-a.singapore-postgres.render.com:5432/room_booking` | ใช้ Internal Database URL เพื่อความเร็วและไม่มีค่า bandwidth |
+| `DB_USERNAME` | Username จากหน้า Render PostgreSQL | ชื่อผู้ใช้ฐานข้อมูล |
+| `DB_PASSWORD` | Password จากหน้า Render PostgreSQL | รหัสผ่านฐานข้อมูล |
+| `SPRING_PROFILES_ACTIVE` | `prod` (หน้าเว็บ) หรือ `api` (REST API) | Profile ที่ต้องการรัน |
+
+#### การตั้งค่าบนเครื่อง (Local Development ผ่าน `.env`)
+หากต้องการเชื่อมต่อไปยัง Render PostgreSQL จากเครื่อง ให้สร้างไฟล์ `code/.env` (ดูตัวอย่างที่ [code/.env.example](code/.env.example)):
 
 ```properties
-DB_URL=jdbc:postgresql://YOUR_DB_HOST:YOUR_DB_PORT/YOUR_DB_NAME?sslmode=require
-DB_USERNAME=YOUR_DB_USER
-DB_PASSWORD=YOUR_DB_PASSWORD
+DB_URL=jdbc:postgresql://YOUR_RENDER_EXTERNAL_HOST:5432/YOUR_DB_NAME?sslmode=require
+DB_USERNAME=YOUR_RENDER_USER
+DB_PASSWORD=YOUR_RENDER_PASSWORD
+SESSION_COOKIE_SECURE=false
 ```
 
-ใช้ host, port, database และ credentials ของฐานข้อมูลจริง `DB_URL` ต้องเป็น JDBC URL และแยก username/password ออกมาตามตัวอย่าง เก็บไฟล์ `.env` ไว้เฉพาะเครื่อง; ในบริการคลาวด์ให้ใส่ค่าใน Environment/Variables
-
-| ตัวแปรเพิ่มเติม | การใช้งาน |
-| --- | --- |
-| `SPRING_PROFILES_ACTIVE` | `prod` สำหรับหน้าเว็บ หรือ `api` สำหรับ REST API |
-| `PORT` | พอร์ตที่แอปรับฟัง ค่าเริ่มต้น 8080 |
-| `SESSION_COOKIE_SECURE` | ค่าเริ่มต้น `true` สำหรับ HTTPS; ตั้ง `false` เฉพาะเมื่อรันหน้าเว็บผ่าน HTTP บนเครื่อง |
-
-หากใช้ PostgreSQL บนเครื่อง เปลี่ยน `DB_URL` เป็น `jdbc:postgresql://localhost:5432/room_booking` และใช้ credentials ของฐานข้อมูลนั้น
+*หมายเหตุ:* หากรัน PostgreSQL บนเครื่องตัวเอง (Local Docker) ให้เปลี่ยนเป็น `DB_URL=jdbc:postgresql://localhost:5432/room_booking` และตั้ง `SESSION_COOKIE_SECURE=false` (เนื่องจาก `http://localhost` ไม่ใช่ HTTPS ถ้าไม่ตั้ง login แล้วจะหลุด)
 
 ### เตรียม schema
 
-สร้างฐานข้อมูลว่างก่อน แล้วรันคำสั่งนี้จากโฟลเดอร์หลัก โดยแทนค่าตัวอย่างด้วยข้อมูลฐานข้อมูลของตนเอง:
+แอปตั้งค่า `ddl-auto=validate` ไว้ จึงต้องรัน [schema.sql](code/src/main/resources/db/postgresql/schema.sql) เพื่อสร้างตารางทั้ง 7 ตารางก่อนเริ่มแอปครั้งแรก:
+
+**รันเข้า Render PostgreSQL ผ่าน External Database URL:**
 
 ```powershell
-psql "host=YOUR_DB_HOST port=YOUR_DB_PORT dbname=YOUR_DB_NAME user=YOUR_DB_USER sslmode=require" -W -v ON_ERROR_STOP=1 --single-transaction -f "./code/src/main/resources/db/postgresql/schema.sql"
+psql "<Render External Database URL>" -v ON_ERROR_STOP=1 -f "./code/src/main/resources/db/postgresql/schema.sql"
 ```
 
-`-W` ให้กรอกรหัสผ่านผ่าน prompt ก่อนรันกับฐานข้อมูลเดิมต้องตรวจโครงสร้างและข้อมูลให้พร้อม สคริปต์ [schema เฉพาะคนที่ 4](code/src/main/resources/db/nuttachai_673380581-8_04/schema.sql) ใช้กับ `booking_equipment` และไม่ใช้แทน full schema ส่วน `data.sql` ของสมาชิกและ SQL fixtures ใช้สำหรับการทดสอบ
+หรือระบุพารามิเตอร์แยก:
+
+```powershell
+psql "host=YOUR_RENDER_EXTERNAL_HOST port=5432 dbname=YOUR_DB_NAME user=YOUR_RENDER_USER sslmode=require" -W -v ON_ERROR_STOP=1 --single-transaction -f "./code/src/main/resources/db/postgresql/schema.sql"
+```
+
+*(กรณีใช้ Docker บนเครื่อง: `Get-Content code\src\main\resources\db\postgresql\schema.sql | docker exec -i room-booking-db psql -U postgres -d room_booking -v ON_ERROR_STOP=1`)*
 
 ## How to Run
 
