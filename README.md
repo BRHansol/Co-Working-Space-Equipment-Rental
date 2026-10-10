@@ -1,11 +1,28 @@
 # Co-Working-Space-Equipment-Rental
 
-ระบบจองพื้นที่ทำงานร่วมกัน ห้องประชุม และอุปกรณ์สำหรับการใช้งานในองค์กร  
-สมาชิกเลือกห้อง วันเวลา และอุปกรณ์ ตรวจสอบความว่าง และติดตามสถานะการจองของตนเองได้  
-เจ้าหน้าที่และผู้ดูแลจัดการห้อง อุปกรณ์ การจอง และการจองแทนผู้ใช้ ส่วนผู้ดูแลจัดการบัญชีผู้ใช้ได้  
-พัฒนาด้วย Spring Boot, REST API และ Thymeleaf โดยเว็บใช้ profile `prod` กับ PostgreSQL เป็นค่าเริ่มต้น สำหรับ Railway/Aiven; H2 ใช้เฉพาะชุดทดสอบ
+ระบบจองพื้นที่ทำงานร่วมกัน ห้องประชุม และอุปกรณ์สำหรับการใช้งานในองค์กร
+สมาชิกค้นหาห้องตามจำนวนคน วันเวลา และอุปกรณ์ ตรวจสอบความว่าง จอง และติดตามสถานะการจองของตนเองได้
+เจ้าหน้าที่ (STAFF) และผู้ดูแล (ADMIN) อนุมัติ/ปฏิเสธการจอง จัดการห้อง อุปกรณ์ และจองแทนผู้ใช้ ส่วน ADMIN จัดการบัญชีผู้ใช้ได้
+
+พัฒนาด้วย Spring Boot 4, Thymeleaf และ REST API บนฐานข้อมูล PostgreSQL ติดตั้งใช้งานจริงบน Render ผ่าน CI/CD ของ GitHub Actions
 
 Repository: [BRHansol/Co-Working-Space-Equipment-Rental](https://github.com/BRHansol/Co-Working-Space-Equipment-Rental)
+
+## ระบบที่ใช้งานจริง (Deployment URL)
+1.
+| | URL |
+| --- | --- |
+| หน้าเว็บ | https://web-service-m1fz.onrender.com |
+| REST API | https://room-booking-api-k47v.onrender.com/api/v1/rooms |
+| Swagger UI | https://room-booking-api-k47v.onrender.com/swagger-ui.html |
+2.
+| | URL |
+| --- | --- |
+| หน้าเว็บ |  |
+| REST API |  |
+| Swagger UI |  |
+
+Render แบบฟรีจะหยุด service เมื่อไม่มีการใช้งานประมาณ 15 นาที การเปิดครั้งแรกหลังจากนั้นใช้เวลาประมาณ 30–60 วินาที
 
 ## สมาชิกกลุ่ม
 
@@ -16,8 +33,6 @@ Repository: [BRHansol/Co-Working-Space-Equipment-Rental](https://github.com/BRHa
 | 3 | นายบุญปวีณ เรืองไพศาล | 673380588-4 | 03 | `boonyapaween_673380588-4_03` | Booking Core + State: `Booking`, `BookingStatus`, Booking CRUD Controller/Service/Repository, State classes/`BookingContext`, pagination และ sorting |
 | 4 | นายณัฏฐชัย ผลดี | 673380581-8 | 04 | `nuttachai_673380581-8_04` | Booking Validation + Equipment Linking: `BookingEquipment`, validation handlers/chain/context แบบ Chain of Responsibility, Booking request/response DTO และ Mapper |
 | 5 | นายจีรภัทร แก้วดี | 673380577-9 | 03 | `jiraphat_673380577-9_03` | Notification Observer + Infrastructure: `BookingStatusHistory`, event/listener, Global Exception Handler/`ErrorResponse`, Swagger, Docker/Compose, Cloud Deployment และ CI |
-
-ชื่อและหน้าที่เป็นข้อมูลที่ทีมระบุ ส่วนรหัสนักศึกษาและ Section อ้างอิงจากชื่อ branches ที่พบใน Git ต้องตรวจยืนยันข้อมูลสมาชิกก่อนส่งงาน
 
 ## Tech Stack
 
@@ -33,7 +48,9 @@ Repository: [BRHansol/Co-Working-Space-Equipment-Rental](https://github.com/BRHa
 | Security | Spring Security, BCrypt และ session/CSRF guard สำหรับเว็บ `prod` |
 | API documentation | springdoc-openapi-starter-webmvc-ui 3.1.0 |
 | Testing | JUnit Jupiter 6.0.3, Mockito 5.23.0, Spring Boot Test, H2 และ Awaitility; เวอร์ชันทดสอบจัดการโดย Spring Boot BOM |
-| เครื่องมืออื่น | Lombok, Git/GitHub, Dockerfile และ Compose สำหรับเชื่อม PostgreSQL ภายนอก |
+| เครื่องมืออื่น | Lombok, Git/GitHub |
+| CI/CD | GitHub Actions: Build → Test → Deploy (Render Deploy Hook) |
+| Deployment | Docker (multi-stage build), Render Web Service × 2 และ Render PostgreSQL |
 
 ## System Architecture
 
@@ -71,6 +88,35 @@ Patterns ที่มี implementation ในระบบ:
 | Chain of Responsibility | `service/validation`: ตรวจสิทธิ์ เวลา ความว่างห้อง และจำนวนอุปกรณ์ตามลำดับ |
 
 ห้อง STANDARD อนุมัติทันทีตาม strategy ส่วนห้อง VIP รออนุมัติ การจองใช้สถานะ `PENDING`, `APPROVED`, `REJECTED`, `CANCELLED` และ `COMPLETED`
+
+### Deployment Architecture
+
+แอปตัวเดียวกันถูก deploy เป็น 2 service ที่ใช้ฐานข้อมูลเดียวกัน แยกกันด้วย Spring profile
+
+| Service | Profile | เปิดอะไร |
+| --- | --- | --- |
+| `web-service` | `prod` (= `web` + `postgres`, ค่าเริ่มต้น) | หน้าเว็บ Thymeleaf, login/session, สิทธิ์ USER/STAFF/ADMIN, CSRF และปิด `/api/**` ด้วย 403 |
+| `room-booking-api` | `api` (= `postgres`) | REST API `/api/v1/**` และ Swagger UI |
+
+ที่ต้องแยกเพราะ REST API ระบุผู้ใช้ด้วย header `X-User-Id` ที่ client ส่งเอง ถ้าเปิดบน service เดียวกับหน้าเว็บ จะใช้ API ข้ามการตรวจสิทธิ์ของหน้าเว็บได้
+
+```mermaid
+flowchart LR
+    Dev["git push / merge PR<br/>เข้า develop"] --> GA["GitHub Actions<br/>Build → Test → Deploy"]
+    GA -->|"Deploy Hook"| Web
+    GA -->|"Deploy Hook"| Api
+    subgraph Render["Render (Singapore)"]
+        Web["web-service<br/>profile prod"]
+        Api["room-booking-api<br/>profile api"]
+        PG[("Render PostgreSQL")]
+    end
+    User["Browser"] -->|"HTTPS"| Web
+    Client["REST Client / Swagger"] -->|"HTTPS"| Api
+    Web -->|"JDBC"| PG
+    Api -->|"JDBC"| PG
+```
+
+รายละเอียด Component/Deployment Diagram, ตารางเครือข่าย และสเปกเครื่องอยู่ที่ [doc/jiraphat_673380577-9_03/diagrams/component-deployment-diagram.md](doc/jiraphat_673380577-9_03/diagrams/component-deployment-diagram.md)
 
 ## Database Design (ER Diagram)
 
@@ -146,91 +192,93 @@ erDiagram
 - ผู้ใช้/ห้องมีหลายการจอง และการจองมีหลายรายการอุปกรณ์/ประวัติสถานะ
 - `BookingEquipment` เป็น associative entity เชื่อม Booking กับ Equipment และเก็บจำนวนที่ขอใช้
 - Booking ใช้ cascade/orphan removal สำหรับรายการอุปกรณ์ และมี index สำหรับห้อง/ช่วงเวลา/ผู้ใช้
+- `BookingStatusHistory` บันทึกโดย Observer ทุกครั้งที่สถานะการจองเปลี่ยน (`changed_by` เว้นว่างได้เมื่อระบบเปลี่ยนเอง, `changed_at` เติมด้วย JPA Auditing)
 
-### SQL สำหรับ PostgreSQL และขอบเขตสมาชิกคนที่ 4
+### SQL สำหรับ PostgreSQL
 
-ใช้ [full schema](code/src/main/resources/db/postgresql/schema.sql) สำหรับ **ฐานข้อมูล PostgreSQL/Aiven ที่ว่าง** ไฟล์นี้สร้างทั้ง 7 ตาราง, foreign keys, enum/quantity checks และ indexes โดยไม่มีบัญชีหรือข้อมูลทดลอง ต้องรันด้วย `psql` แยกก่อนเปิดแอป แล้ว runtime ใช้ `spring.jpa.hibernate.ddl-auto=validate` และ `spring.sql.init.mode=never` ขั้นตอนและ SSL อยู่ใน [HOWTORUN.md](HOWTORUN.md)
+ใช้ [full schema](code/src/main/resources/db/postgresql/schema.sql) สร้างตารางในฐานข้อมูลที่ว่าง ไฟล์นี้สร้างทั้ง 7 ตาราง, foreign keys, CHECK ของค่า enum/จำนวน และ indexes โดยไม่มีบัญชีหรือข้อมูลทดลอง ต้องรันด้วย `psql` ก่อนเปิดแอปครั้งแรก เพราะ runtime ใช้ `spring.jpa.hibernate.ddl-auto=validate` (ตรวจว่าตารางตรงกับ Entity เท่านั้น ไม่แก้ตารางเอง) และ `spring.sql.init.mode=never`
 
-`CREATE TABLE IF NOT EXISTS` ช่วยให้รันซ้ำโดยคงข้อมูลเดิม แต่ไม่ได้แก้ columns/constraints ของตารางที่มีอยู่แล้ว หากฐานข้อมูลเดิมไม่ตรง Entity ต้องตรวจและเตรียม migration แยก ห้ามถือว่า full schema ซ่อมข้อมูลเก่าให้เอง
+`CREATE TABLE IF NOT EXISTS` ทำให้รันซ้ำได้โดยข้อมูลเดิมไม่หาย แต่ไม่ได้แก้ columns/constraints ของตารางที่มีอยู่แล้ว
 
-[schema ของสมาชิกคนที่ 4](code/src/main/resources/db/nuttachai_673380581-8_04/schema.sql) เป็น manual upgrade เฉพาะ `booking_equipment` ต้องมี parent tables `bookings(id)` กับ `equipment(id)` ก่อน โดยคง positive quantity CHECK และ indexes ธรรมดา ไม่เพิ่ม UNIQUE คู่ booking/equipment เพราะกระทบการแทนที่รายการของ service
-
-[data.sql ของสมาชิกคนที่ 4](code/src/main/resources/db/nuttachai_673380581-8_04/data.sql) และ [fixture สำหรับ SQL tests](code/src/test/resources/db/nuttachai_673380581-8_04/data.sql) เป็นข้อมูล fixture สำหรับฐานข้อมูลทดสอบแยกเท่านั้น ไม่ต้องรันเพื่อ deploy จริง และไม่สร้าง parent rows หรือสมมติ IDs หากไม่พบ parent fixtures ที่ตรงเงื่อนไขจะไม่เพิ่มแถว ไม่มี Flyway/Liquibase ที่รัน migration ให้อัตโนมัติ
+[schema ของสมาชิกคนที่ 4](code/src/main/resources/db/nuttachai_673380581-8_04/schema.sql) เป็น manual upgrade เฉพาะ `booking_equipment` ส่วน [data.sql](code/src/main/resources/db/nuttachai_673380581-8_04/data.sql) และ [fixture สำหรับ SQL tests](code/src/test/resources/db/nuttachai_673380581-8_04/data.sql) เป็นข้อมูลสำหรับฐานข้อมูลทดสอบเท่านั้น ไม่ต้องรันเพื่อ deploy จริง
 
 ## Installation & Setup
 
 ### สิ่งที่ต้องเตรียม
 
-- JDK 17 และตั้ง `JAVA_HOME`/`PATH` ให้ Terminal เรียก `java` กับ `javac` ได้
-- Git และอินเทอร์เน็ตสำหรับดาวน์โหลด Maven/dependencies ครั้งแรก ไม่ต้องติดตั้ง Maven แยก
-- PostgreSQL หรือ Aiven for PostgreSQL พร้อมสิทธิ์เตรียม schema; เว็บและ API ต้องมี `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
-- PostgreSQL client (`psql`) สำหรับรัน full-schema bootstrap และบัญชี Railway สำหรับขั้นตอน deployment
-
-Clone repository แล้วเข้าโฟลเดอร์ที่มี `pom.xml`:
+- JDK 17 ขึ้นไป (`java -version`) ไม่ต้องติดตั้ง Maven เพราะมี Maven Wrapper
+- Git
+- Docker Desktop สำหรับเปิด PostgreSQL บนเครื่อง (หรือ PostgreSQL ที่มีอยู่แล้ว)
 
 ```powershell
 git clone https://github.com/BRHansol/Co-Working-Space-Equipment-Rental.git
-Set-Location -LiteralPath '.\Co-Working-Space-Equipment-Rental\code'
-java -version
-javac -version
-.\mvnw.cmd --version
+cd Co-Working-Space-Equipment-Rental
+git checkout develop
 ```
 
-หากใช้ CMD:
+### เตรียมฐานข้อมูลบนเครื่อง (ครั้งแรกครั้งเดียว)
 
-```bat
-git clone https://github.com/BRHansol/Co-Working-Space-Equipment-Rental.git
-cd Co-Working-Space-Equipment-Rental\code
-java -version
-javac -version
-mvnw.cmd --version
+```powershell
+docker run -d --name room-booking-db `
+  -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=room_booking `
+  -p 5432:5432 postgres:15-alpine
+
+Get-Content code\src\main\resources\db\postgresql\schema.sql | docker exec -i room-booking-db psql -U postgres -d room_booking -v ON_ERROR_STOP=1
 ```
 
-คำสั่ง Maven หลังจากนี้รันจาก `code/` เสมอ หากมีโปรเจกต์อยู่แล้ว ให้เข้า `code/` ของ checkout ที่ทีมตกลงใช้งาน โดยไม่ clone ซ้ำ ตัวอย่าง clone รับ default branch; หากทีมส่งงานบน branch อื่น ต้องเลือก branch/version ที่มีโค้ดชุดเดียวกับ README นี้ก่อนรัน
+macOS/Linux ใช้ `docker exec -i room-booking-db psql -U postgres -d room_booking -v ON_ERROR_STOP=1 < code/src/main/resources/db/postgresql/schema.sql`
+
+### ตั้งค่าการเชื่อมต่อ
+
+แอปอ่านค่าจาก environment variables หรือไฟล์ `code/.env` (ดูตัวอย่างที่ [code/.env.example](code/.env.example); ไฟล์ `.env` ถูก gitignore ไว้ ห้าม commit)
+
+| ตัวแปร | ตัวอย่างบนเครื่อง |
+| --- | --- |
+| `DB_URL` | `jdbc:postgresql://localhost:5432/room_booking` |
+| `DB_USERNAME` | `postgres` |
+| `DB_PASSWORD` | `postgres` |
+| `SESSION_COOKIE_SECURE` | `false` (เฉพาะบนเครื่อง เพราะ `http://localhost` ไม่ใช่ HTTPS ถ้าไม่ตั้ง login แล้วจะหลุด) |
 
 ## How to Run
 
-### เว็บ production: profile `prod`
+รันจากโฟลเดอร์ `code/`
 
-ค่าเริ่มต้นคือ `prod` ซึ่งรวม `web,postgres` ใช้ Thymeleaf, session, role guards และ CSRF กับ PostgreSQL; profile `local`/`local-postgres` และ H2 แบบไฟล์ไม่ได้ใช้ใน runtime แล้ว
-
-| Environment | ค่าที่ต้องเตรียม |
-| --- | --- |
-| `DB_URL` | JDBC URL ของ Aiven เช่น `jdbc:postgresql://YOUR_AIVEN_HOST:YOUR_AIVEN_PORT/YOUR_DATABASE?sslmode=require` |
-| `DB_USERNAME` | ผู้ใช้ฐานข้อมูลจาก Aiven |
-| `DB_PASSWORD` | รหัสผ่านฐานข้อมูล ตั้งผ่าน environment/Variables ของ service |
-| `PORT` | Railway กำหนดให้; หากไม่กำหนดใช้ 8080 |
-| `SPRING_PROFILES_ACTIVE` | ไม่จำเป็นเมื่อใช้ค่าเริ่มต้น; ตั้ง `prod` ได้เพื่อระบุชัดเจน |
-
-ไม่มี fallback ไปฐานข้อมูล localhost เมื่อไม่ตั้งค่า DB แอปจะเริ่มไม่ได้ ให้เตรียม full schema ก่อนเริ่มเว็บ แอปรับที่ `0.0.0.0` และใช้ secure/HttpOnly/SameSite=Lax session cookie พร้อมรองรับ forwarded headers จาก proxy จึงต้องเข้าเว็บผ่าน HTTPS เพื่อใช้ login/session
-
-เมื่อกำหนด environment และเตรียมฐานข้อมูลแล้ว รันจาก `code/`:
+### หน้าเว็บ: profile `prod` (ค่าเริ่มต้น) ที่ http://localhost:8080
 
 ```powershell
-.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=prod"
+.\mvnw.cmd spring-boot:run
 ```
 
-```sh
-sh ./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
-```
-
-เว็บ production ไม่มี demo accounts, rooms หรือ equipment สมัครผ่าน `/register` จะได้ role `USER` การเตรียม ADMIN คนแรกทำโดยผู้ดูแลผ่าน DB console หลังตรวจบัญชีเป้าหมายตาม [HOWTORUN.md](HOWTORUN.md) จากนั้นใช้ `/admin` จัดการห้อง อุปกรณ์และผู้ใช้
-
-ดูขั้นตอน [เตรียม Aiven, SSL, Railway และ Docker Compose](HOWTORUN.md) โดย Compose ใช้ PostgreSQL ภายนอกผ่าน environment ไม่สร้าง PostgreSQL service หรือ H2 ให้เอง
-
-### โหมด API แยก: profile `api`
-
-`api` รวม `postgres` และใช้ DB environment/schema เดียวกัน ใช้สำหรับ API integration/testing ของ backend โดยไม่เปิด Thymeleaf web controllers:
+### REST API + Swagger: profile `api` ที่ http://localhost:8081/swagger-ui.html
 
 ```powershell
+$env:PORT = "8081"
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=api"
 ```
 
-การยืนยันตัวตนของ API ยังเป็น contract เดิมตามหัวข้อถัดไป ไม่ควรเปิด API service นี้เป็น production สาธารณะโดยอ้างว่ามี authentication สมบูรณ์ ส่วนเว็บ `prod` ปิด `/api/**` ด้วย HTTP 403
+macOS/Linux ใช้ `./mvnw` แทน `.\mvnw.cmd` รันทั้งสองโหมดพร้อมกันได้ (ใช้ฐานข้อมูลเดียวกัน)
+
+### Docker Compose
+
+```powershell
+docker compose up --build
+```
+
+[code/docker-compose.yml](code/docker-compose.yml) build image จาก [Dockerfile](code/Dockerfile) (multi-stage: Maven build → JRE 17 alpine, รันด้วย user ที่ไม่ใช่ root) แล้วรันหน้าเว็บ profile `prod` โดยเชื่อมกับ PostgreSQL ภายนอกผ่าน `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` (จาก PostgreSQL บนเครื่องใน container ให้ใช้ host `host.docker.internal` แทน `localhost`)
+
+### เตรียมบัญชีและข้อมูลเริ่มต้น
+
+ระบบไม่สร้างบัญชี ห้อง หรืออุปกรณ์ตัวอย่างให้
+
+1. สร้างบัญชี ADMIN ผ่าน Swagger `POST /api/v1/users` ด้วย `"role": "ADMIN"` หรือสมัครที่ `/register` (ได้ role `USER`) แล้วเลื่อน role ในฐานข้อมูล: `UPDATE users SET role = 'ADMIN' WHERE username = '...';`
+2. login เป็น ADMIN แล้วเพิ่มห้องและอุปกรณ์ที่ `/admin` (หรือ `POST /api/v1/rooms`, `POST /api/v1/equipments`)
+3. ห้อง `STANDARD` อนุมัติการจองทันที ห้อง `VIP` รอ STAFF/ADMIN อนุมัติ
+
+คู่มือละเอียด (รวมการ deploy บน Render และแก้ปัญหาที่พบบ่อย) อยู่ที่ [doc/jiraphat_673380577-9_03/HOWTORUN.md](doc/jiraphat_673380577-9_03/HOWTORUN.md)
 
 ## API Documentation
 
-เมื่อเลือก profile `api` สามารถตรวจ `/swagger-ui.html` และ `/v3/api-docs` บน URL ของ service ที่ตนรันได้ เว็บ `prod` ปิด API และ Swagger/OpenAPI; รายการ endpoints ต่อไปนี้อธิบาย backend contract สำหรับ integration/testing ไม่ใช่ public API ที่ยืนยัน deployment แล้ว
+Swagger UI: https://room-booking-api-k47v.onrender.com/swagger-ui.html และ OpenAPI JSON: `/v3/api-docs` (เปิดเฉพาะ profile `api`)
 
 | Method | Endpoint | หน้าที่ / success status |
 | --- | --- | --- |
@@ -255,6 +303,7 @@ sh ./mvnw spring-boot:run -Dspring-boot.run.profiles=prod
 | GET | `/api/v1/users/{userId}/bookings` | การจองของผู้ใช้แบบแบ่งหน้า/เรียงลำดับ — 200 |
 | PUT | `/api/v1/bookings/{id}` | แก้การจอง — 200 |
 | PATCH | `/api/v1/bookings/{id}/status` | เปลี่ยนสถานะ เช่น `{"status":"APPROVED"}` — 200 |
+| GET | `/api/v1/bookings/{id}/status-history` | ประวัติการเปลี่ยนสถานะ (บันทึกโดย Observer) เรียงจากล่าสุด — 200 |
 
 ตัวอย่าง pagination/sorting: `GET /api/v1/rooms?page=0&size=10&sort=name,asc` และ `GET /api/v1/rooms/1/bookings?page=0&size=10&sort=startTime,desc` ส่วน users รองรับ page/size แต่ implementation ปัจจุบันเรียง `id,desc` เสมอ
 
@@ -277,22 +326,22 @@ POST/PUT/PATCH ของ bookings ใช้ header `X-User-Id` เป็น ID �
 Global Exception Handler คืน `ErrorResponse` ที่มี `timestamp`, `status`, `error`, `message`, `path`, `details` สำหรับ validation/not found/conflict/server errors ส่วน header interceptor ยังมี error JSON แบบ `error`/`message` แยกต่างหาก
 
 Authentication ฝั่ง REST ยังเป็น contract เดิม: `api` ใช้ `permitAll` และ booking รับ `X-User-Id` ที่ client ส่งเอง โดยไม่มี Basic/JWT validation จริง ใช้สำหรับ integration/testing ในขอบเขตที่ควบคุมการเข้าถึงเท่านั้น เว็บ `prod` ปิด `/api/**` จึงไม่ใช้ header นี้ข้าม session/role/CSRF guards
+รายละเอียด exception → HTTP status ทั้งหมดอยู่ที่ [doc/jiraphat_673380577-9_03/error-handling.md](doc/jiraphat_673380577-9_03/error-handling.md)
 
 ## How to Run Tests
 
-รันจาก `code/` โดยใช้ test configuration ใน `src/test/resources` ซึ่งกำหนด H2 in-memory แยกจาก PostgreSQL/Aiven ไม่ต้องเตรียม cloud DB เพื่อรันชุดนี้ และไม่ต้องใส่ profile runtime `prod` หรือ `api` เพิ่มเอง
-
-### ชุดรวมที่ Maven ตรวจพบ
+test ใช้ H2 in-memory (`code/src/test/resources/application.properties`) ไม่ต้องมี PostgreSQL
 
 ```powershell
-.\mvnw.cmd test
+.\mvnw.cmd clean test
 ```
 
-```sh
-sh ./mvnw test
-```
+คำสั่งนี้รวม tests จาก `code/src/test/java` และ `test/{branch}/java` ของ `nuttachai_673380581-8_04`, `krittitee_673380572-9_04` และ `jiraphat_673380577-9_03` ผ่าน `build-helper-maven-plugin` ผลล่าสุด: **233 tests ผ่านทั้งหมด** (JUnit 5, Mockito, Spring Boot Test: `@SpringBootTest`, `@DataJpaTest`, `@WebMvcTest`)
 
-คำสั่งปกติรวม tests จาก `code/src/test/java` และ `test/{branch}/java` ของ `nuttachai_673380581-8_04`, `krittitee_673380572-9_04` และ `jiraphat_673380577-9_03` ผ่าน build-helper รายงานอยู่ที่ `code/target/surefire-reports/`
+### Test Report
+
+- บนเครื่อง: `.\mvnw.cmd surefire-report:report-only` แล้วเปิด `code/target/reports/surefire.html`
+- บน GitHub: แท็บ **Actions** → เลือก run → **Artifacts** → ดาวน์โหลด `test-report`
 
 ### ชุดเฉพาะสมาชิกคนที่ 4
 
@@ -311,15 +360,32 @@ Profile นี้ใช้ `test/nuttachai_673380581-8_04/java` แยก test c
 | `BookingEquipmentSqlTest` | Manual schema/data scripts ด้วย H2 |
 | `PostgresqlSchemaTest` | Full-schema bootstrap, FK/check/nullability, การรันซ้ำและ JPA schema validation |
 
-จำนวน tests และผลผ่านให้อ้างอิง Surefire reports จากการรันล่าสุด การทดสอบด้วย H2/Mockito ไม่ยืนยันการเชื่อม Aiven หรือการเปิดเว็บบน Railway
+## CI/CD
 
-## Deployment URL
+[.github/workflows/ci-cd.yml](.github/workflows/ci-cd.yml) ทำงานเมื่อ push หรือเปิด pull request เข้า `main`/`develop`
 
-ยังไม่มี public URL ที่ยืนยันจาก deployment ในเอกสารนี้ หลัง deploy และตรวจ login/roles/CSRF/การบันทึก booking บน Railway จริงแล้ว จึงบันทึก URL และผลตรวจ ขั้นตอนอยู่ใน [HOWTORUN.md](HOWTORUN.md)
+| Job | ทำอะไร |
+| --- | --- |
+| Build | `mvn package` สร้าง jar เก็บเป็น artifact `app-jar` |
+| Test | `mvn test` ของทุกสมาชิก แล้วสร้าง Test Report เก็บเป็น artifact `test-report` |
+| Deploy to Render | เฉพาะ push (หลัง merge) และเมื่อ test ผ่านแล้ว: เรียก Deploy Hook ของทั้ง 2 service ซึ่งเก็บใน GitHub Secrets (`RENDER_DEPLOY_HOOK_URL`, `RENDER_WEB_DEPLOY_HOOK_URL`) |
 
-Railway ใช้ Root Directory `code`, Dockerfile build และ Variables ของ Aiven; ให้ Generate Domain เพื่อเข้าผ่าน HTTPS แอปไม่สร้าง schema หรือ seed demo data ระหว่าง startup
+Render build image จาก `code/Dockerfile` ถ้า service ใหม่เริ่มไม่สำเร็จ Render จะคงเวอร์ชันเดิมที่ใช้ได้ไว้
 
-GitHub Actions ปัจจุบันมี build/test และ Render Deploy Hooks ของทีม การเตรียม profile `prod` ไม่ได้เปลี่ยน workflow นี้เป็น Railway deploy อัตโนมัติ ต้องตั้ง Railway service แยกให้ใช้โค้ดเวอร์ชันที่ทีมเลือก ไม่มีคำสั่ง commit/push อัตโนมัติในคู่มือนี้
+## เอกสารประกอบ
+
+| โฟลเดอร์ | เนื้อหา |
+| --- | --- |
+| [doc/diagrams/nuttachai_673380581-8_04/](doc/diagrams/nuttachai_673380581-8_04/README.md) | Use Case, Domain/Class, Sequence, Activity (validation), ER, Component/Deployment, State Diagram |
+| [doc/krittitee_673380572-9_04/](doc/krittitee_673380572-9_04/README.md) | Room/Equipment, Strategy Pattern, SOLID Analysis, Class/Sequence Diagram |
+| [doc/jiraphat_673380577-9_03/](doc/jiraphat_673380577-9_03/README.md) | Observer Pattern, SOLID Analysis, Error Handling, Component/Deployment Diagram, How to Run/Deploy |
+
+## ข้อจำกัดที่ทราบ
+
+- REST API (profile `api`) ยังไม่มีการยืนยันตัวตนจริง ระบุผู้ใช้ด้วย header `X-User-Id` จึงใช้สำหรับ integration/testing ส่วนหน้าเว็บใช้ session, role guard และ CSRF
+- บาง web controllers (`AuthViewController`, `AdminViewController`, `CatalogViewController`, `WebSessionSupport`) ยังเรียก Repository โดยตรง ไม่ผ่าน Service layer ทั้งหมด
+- การจองห้อง STANDARD ที่อนุมัติทันทีตอนสร้างยังไม่มีแถวใน `booking_status_history` เพราะมีเฉพาะ `updateStatus` ที่ publish event
+- การแจ้งเตือนยังเป็น log ยังไม่มีอีเมล/SMS จริง (ต่อยอดที่ `NotificationServiceImpl`)
 
 ## Project Structure
 
@@ -359,4 +425,4 @@ Co-Working-Space-Equipment-Rental/
 └── .github/workflows/                         # CI/CD workflow ของทีม
 ```
 
-Assets ของเว็บอยู่ใน `code/src/main/resources/templates/assets/` และถูก map เป็น `/assets/**` ด้วย `WebAssetsConfig` ไม่ได้โหลดจาก root `img/` ต้องตรวจเอกสาร/diagrams และสื่อที่ส่งจริงใน `doc/` และ `img/` ตามหัวข้อของใบงาน ไม่ถือว่าเอกสารครบจากการมีโฟลเดอร์เพียงอย่างเดียว
+Assets ของเว็บอยู่ใน `code/src/main/resources/templates/assets/` และถูก map เป็น `/assets/**` ด้วย `WebAssetsConfig` ไม่ได้โหลดจาก root `img/`
