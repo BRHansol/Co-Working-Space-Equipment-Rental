@@ -1,0 +1,47 @@
+@startuml state-booking
+skinparam dpi 150
+skinparam defaultFontName Loma
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam backgroundColor white
+skinparam ArrowColor #5B6770
+skinparam ClassBorderColor #5B6770
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassHeaderBackgroundColor #FFF4E8
+skinparam StateBorderColor #5B6770
+skinparam StateBackgroundColor #FFFFFF
+skinparam NoteBackgroundColor #FFF8E1
+skinparam NoteBorderColor #C9A227
+skinparam SequenceLifeLineBorderColor #9AA5AE
+skinparam ParticipantBorderColor #5B6770
+skinparam ParticipantBackgroundColor #FFF4E8
+skinparam ActorBorderColor #5B6770
+title State Diagram: วงจรสถานะการจอง
+hide empty description
+
+state PENDING #FFF4E8 : PendingState\nแก้ไขรายละเอียดได้
+state APPROVED : ApprovedState
+state REJECTED #EEEEEE : RejectedState\nสถานะสุดท้าย
+state CANCELLED #EEEEEE : CancelledState\nสถานะสุดท้าย
+state COMPLETED #EEEEEE : CompletedState\nสถานะสุดท้าย
+
+[*] --> PENDING : createBooking()
+PENDING --> APPROVED : approve()
+PENDING --> REJECTED : reject()
+PENDING --> CANCELLED : cancel()
+APPROVED --> CANCELLED : cancel()
+APPROVED --> COMPLETED : complete()
+REJECTED --> [*]
+CANCELLED --> [*]
+COMPLETED --> [*]
+
+note right of PENDING
+  ห้อง STANDARD ถูก approve()
+  ทันทีก่อน save (Strategy)
+end note
+
+legend bottom
+  ทางอื่นทั้งหมด throw InvalidStateTransitionException และได้ HTTP 409
+endlegend
+@enduml
