@@ -1,0 +1,115 @@
+@startuml class-state
+skinparam dpi 150
+skinparam defaultFontName Loma
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam backgroundColor white
+skinparam ArrowColor #5B6770
+skinparam ClassBorderColor #5B6770
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassHeaderBackgroundColor #FFF4E8
+skinparam StateBorderColor #5B6770
+skinparam StateBackgroundColor #FFFFFF
+skinparam NoteBackgroundColor #FFF8E1
+skinparam NoteBorderColor #C9A227
+skinparam SequenceLifeLineBorderColor #9AA5AE
+skinparam ParticipantBorderColor #5B6770
+skinparam ParticipantBackgroundColor #FFF4E8
+skinparam ActorBorderColor #5B6770
+title Class Diagram: State Pattern ของการจอง
+left to right direction
+hide empty members
+
+interface BookingState <<State>> {
+  + getStatus() : BookingStatus
+  + isEditable() : boolean
+  + approve(context : BookingContext)
+  + reject(context : BookingContext)
+  + cancel(context : BookingContext)
+  + complete(context : BookingContext)
+  - invalid(action : String) : InvalidStateTransitionException
+}
+
+class PendingState <<Concrete State>> {
+  + approve(context)
+  + reject(context)
+  + cancel(context)
+  + isEditable() : boolean
+  + getStatus() : BookingStatus
+}
+class ApprovedState <<Concrete State>> {
+  + cancel(context)
+  + complete(context)
+  + getStatus() : BookingStatus
+}
+class RejectedState <<Concrete State>> {
+  + getStatus() : BookingStatus
+}
+class CancelledState <<Concrete State>> {
+  + getStatus() : BookingStatus
+}
+class CompletedState <<Concrete State>> {
+  + getStatus() : BookingStatus
+}
+
+class BookingContext <<Context>> {
+  - booking : Booking
+  - state : BookingState
+  + BookingContext(booking : Booking)
+  + approve()
+  + reject()
+  + cancel()
+  + complete()
+  + isEditable() : boolean
+  ~ setState(newState : BookingState)
+  + getBooking() : Booking
+  - {static} resolveState(status : BookingStatus) : BookingState
+}
+
+class Booking <<Entity>> {
+  - status : BookingStatus
+  + getStatus() : BookingStatus
+  + setStatus(status : BookingStatus)
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+class InvalidStateTransitionException {
+  + InvalidStateTransitionException(from : BookingStatus, action : String)
+}
+
+class BookingServiceImpl <<Client>> {
+  + createBooking(request, requesterId) : BookingResponse
+  + updateBooking(id, request, requesterId) : BookingResponse
+  + updateStatus(id, targetStatus, actorId) : BookingResponse
+}
+
+BookingState <|.. PendingState
+BookingState <|.. ApprovedState
+BookingState <|.. RejectedState
+BookingState <|.. CancelledState
+BookingState <|.. CompletedState
+
+BookingServiceImpl ..> BookingContext : สร้างและสั่ง action
+BookingContext o--> BookingState : state ปัจจุบัน
+BookingContext --> Booking : sync status
+Booking --> BookingStatus
+BookingState ..> InvalidStateTransitionException : throws
+
+note bottom of BookingState
+  default method ปฏิเสธทุก action
+  state จริง override แค่ทางที่ไปได้
+end note
+
+note bottom of BookingContext
+  setState() เป็น package-private
+  เปลี่ยนสถานะได้ผ่าน action เท่านั้น
+end note
+@enduml

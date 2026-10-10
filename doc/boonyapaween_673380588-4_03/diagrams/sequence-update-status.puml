@@ -1,0 +1,60 @@
+@startuml sequence-update-status
+skinparam dpi 150
+skinparam defaultFontName Loma
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam backgroundColor white
+skinparam ArrowColor #5B6770
+skinparam ClassBorderColor #5B6770
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassHeaderBackgroundColor #FFF4E8
+skinparam StateBorderColor #5B6770
+skinparam StateBackgroundColor #FFFFFF
+skinparam NoteBackgroundColor #FFF8E1
+skinparam NoteBorderColor #C9A227
+skinparam SequenceLifeLineBorderColor #9AA5AE
+skinparam ParticipantBorderColor #5B6770
+skinparam ParticipantBackgroundColor #FFF4E8
+skinparam ActorBorderColor #5B6770
+title Sequence: เปลี่ยนสถานะการจอง (PATCH /api/v1/bookings/{id}/status)
+autonumber
+
+actor Admin
+participant "BookingController" as C
+participant "BookingServiceImpl" as S
+participant "BookingRepository" as R
+participant "BookingContext" as X
+participant "Concrete State" as ST
+participant "ApplicationEventPublisher" as P
+participant "GlobalExceptionHandler" as H
+
+Admin -> C : PATCH /bookings/{id}/status\nX-User-Id, {"status": ...}
+C -> S : updateStatus(id, status, actorId)
+S -> S : switch(status) เลือก action\n(PENDING ได้ 400 ทันที)
+S -> R : findById(id)
+R --> S : Booking
+
+alt PENDING ไป APPROVED (สำเร็จ)
+  S -> X : new BookingContext(booking)
+  X -> X : resolveState(PENDING)\nได้ PendingState
+  S -> X : approve()
+  X -> ST : PendingState.approve(context)
+  ST -> X : setState(new ApprovedState())
+  X -> X : booking.setStatus(APPROVED)
+  S -> R : save(booking)
+  S -> P : publishEvent(BookingStatusChangedEvent\nPENDING ไป APPROVED)
+  note right of P : NotificationListener (AFTER_COMMIT)\nบันทึก booking_status_history
+  S --> C : BookingResponse
+  C --> Admin : 200 OK
+else COMPLETED ไป CANCELLED (ผิดกฎ)
+  S -> X : new BookingContext(booking)
+  X -> X : resolveState(COMPLETED)\nได้ CompletedState
+  S -> X : cancel()
+  X -> ST : CompletedState.cancel(context)
+  ST --> S : throw InvalidStateTransitionException\n(default method ของ BookingState)
+  note over S : ไม่ save ไม่ publish event\n@Transactional rollback
+  S --> H : exception
+  H --> Admin : 409 Conflict\n"Cannot cancel a booking in status COMPLETED"
+end
+@enduml
