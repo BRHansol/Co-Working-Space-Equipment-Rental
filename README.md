@@ -94,8 +94,10 @@ Observer รับ event จากการเปลี่ยนสถานะ�
 
 | ส่วนงาน | เอกสาร |
 | --- | --- |
+| คนที่ 1 — User/Authentication | [สารบัญ](doc/yuttana_673380422-8_03/README.md), [Design Patterns](doc/yuttana_673380422-8_03/design-patterns.md), [SOLID Analysis](doc/yuttana_673380422-8_03/solid-analysis.md), [User/Auth API](doc/yuttana_673380422-8_03/api-user-auth.md) |
 | คนที่ 2 — Room/Equipment | [สารบัญ](doc/krittitee_673380572-9_04/README.md), [Design Patterns](doc/krittitee_673380572-9_04/design-patterns.md), [SOLID Analysis](doc/krittitee_673380572-9_04/solid-analysis.md) |
-| คนที่ 4 — Validation/Equipment Linking | [Design Patterns](doc/nuttachai_673380581-8_04/design-patterns.md), [SOLID Analysis](doc/nuttachai_673380581-8_04/solid-analysis.md), [Booking Validation / DTO / Mapper](doc/nuttachai_673380581-8_04/api-booking-validation.md) |
+| คนที่ 3 — Booking Core/State | [สารบัญ](doc/boonyapaween_673380588-4_03/README.md), [Design Patterns](doc/boonyapaween_673380588-4_03/design-patterns.md), [SOLID Analysis](doc/boonyapaween_673380588-4_03/solid-analysis.md), [Booking API](doc/boonyapaween_673380588-4_03/api-booking.md), [State Diagram](doc/boonyapaween_673380588-4_03/diagrams/state-booking.md) |
+| คนที่ 4 — Validation/Equipment Linking | [Design Patterns](doc/nuttachai_673380581-8_04/design-patterns.md), [SOLID Analysis](doc/nuttachai_673380581-8_04/solid-analysis.md), [Booking Validation / DTO / Mapper](doc/nuttachai_673380581-8_04/api-booking-validation.md), [Diagrams](doc/nuttachai_673380581-8_04/diagrams/) |
 | คนที่ 5 — Observer/Infrastructure | [สารบัญ](doc/jiraphat_673380577-9_03/README.md), [Design Patterns](doc/jiraphat_673380577-9_03/design-patterns.md), [SOLID Analysis](doc/jiraphat_673380577-9_03/solid-analysis.md), [Component/Deployment Diagram](doc/jiraphat_673380577-9_03/diagrams/component-deployment-diagram.md) |
 
 ## Database Design
@@ -247,7 +249,7 @@ docker compose up --build
 | รายการจองตามห้อง/ผู้ใช้ | `/api/v1/rooms/{roomId}/bookings`, `/api/v1/users/{userId}/bookings` | GET แบบแบ่งหน้าและเรียงลำดับ |
 | สถานะและประวัติ | `/api/v1/bookings/{id}/status`, `/api/v1/bookings/{id}/status-history` | PATCH เปลี่ยนสถานะ และ GET ประวัติ |
 
-ตัวอย่าง pagination/sorting: `GET /api/v1/rooms?page=0&size=10&sort=name,asc` ส่วน users รับ page/size แต่ implementation ปัจจุบันเรียง `id,desc` เสมอ การยกเลิก Booking ใช้ PATCH สถานะ `CANCELLED` แทน DELETE
+ตัวอย่าง pagination/sorting: `GET /api/v1/rooms?page=0&size=10&sort=name,asc` ส่วน users รับ page/size แต่ implementation ปัจจุบันเรียง `id,desc` เสมอ การยกเลิก Booking ใช้ PATCH สถานะ `CANCELLED` แทน DELETE รายละเอียด endpoint ของการจอง status code และ pagination อยู่ใน [Booking API ของคนที่ 3](doc/boonyapaween_673380588-4_03/api-booking.md)
 
 ตัวอย่าง body ของ `POST /api/v1/bookings` โดยแทน IDs ด้วยข้อมูลที่มีอยู่จริง และส่ง header `X-User-Id` เป็น ID ผู้ดำเนินการ:
 
@@ -277,15 +279,22 @@ Global Exception Handler คืน `timestamp`, `status`, `error`, `message`, `p
 .\mvnw.cmd clean test
 ```
 
-Linux/macOS ใช้ `sh ./mvnw clean test` หากต้องการตรวจและสร้าง JAR ใช้ `verify` ปัจจุบัน POM รวม tests จาก `code/src/test/java` และโฟลเดอร์ของคนที่ 1, 2, 4 และ 5 ใน `test/{branch}/java`
+Linux/macOS ใช้ `sh ./mvnw clean test` หากต้องการตรวจและสร้าง JAR ใช้ `verify` ปัจจุบัน POM รวม tests จาก `code/src/test/java` และโฟลเดอร์ของสมาชิกทั้ง 5 คนใน `test/{branch}/java`
 
-รันเฉพาะคนที่ 4:
+รันเฉพาะ test ของสมาชิกแต่ละคนด้วย Maven profile ที่ชื่อเดียวกับ branch เช่น
 
 ```powershell
-.\mvnw.cmd clean test -Pnuttachai_673380581-8_04
+.\mvnw.cmd clean test -P boonyapaween_673380588-4_03
 ```
 
-ผลชุดรวมอยู่ใน `code/target/surefire-reports/` ส่วน profile คนที่ 4 เก็บใน `code/target/nuttachai_673380581-8_04-surefire-reports/`
+| สมาชิก | Profile |
+| --- | --- |
+| คนที่ 1 | `yuttana_673380422-8_03` |
+| คนที่ 2 | `krittitee_673380572-9_04` |
+| คนที่ 3 | `boonyapaween_673380588-4_03` |
+| คนที่ 4 | `nuttachai_673380581-8_04` |
+
+คนที่ 5 ยังไม่มี profile แยก test ของคนที่ 5 รันในชุดรวม ผลชุดรวมอยู่ใน `code/target/surefire-reports/` ส่วนผลของแต่ละ profile อยู่ใน `code/target/<profile>-surefire-reports/`
 
 สร้างรายงาน HTML ของชุดรวมหลังรันทดสอบ:
 
@@ -311,14 +320,11 @@ Linux/macOS ใช้ `sh ./mvnw clean test` หากต้องการต�
 
 ## Deployment URL
 
-ลิงก์ deployment ที่ทีมระบุไว้:
-
 | บริการ | URL |
 | --- | --- |
-| [doc/yuttana_673380422-8_03/](doc/yuttana_673380422-8_03/README.md) | User & UserProfile (1:1), Authentication, SOLID Analysis, Design Patterns, API Docs, Class/Sequence/ER Diagram |
-| [doc/diagrams/nuttachai_673380581-8_04/](doc/diagrams/nuttachai_673380581-8_04/README.md) | Use Case, Domain/Class, Sequence, Activity (validation), ER, Component/Deployment, State Diagram |
-| [doc/krittitee_673380572-9_04/](doc/krittitee_673380572-9_04/README.md) | Room/Equipment, Strategy Pattern, SOLID Analysis, Class/Sequence Diagram |
-| [doc/jiraphat_673380577-9_03/](doc/jiraphat_673380577-9_03/README.md) | Observer Pattern, SOLID Analysis, Error Handling, Component/Deployment Diagram, How to Run/Deploy |
+| หน้าเว็บ (profile `prod`) | https://web-service-m1fz.onrender.com/ |
+
+REST API (profile `api`) deploy เป็น Render service แยก ผ่าน `RENDER_DEPLOY_HOOK_URL` ใน [CI/CD](#cicd) เอกสารการออกแบบของสมาชิกแต่ละคนอยู่ใน [เอกสารการออกแบบของสมาชิก](#เอกสารการออกแบบของสมาชิก)
 
 แอปใช้ [Dockerfile](code/Dockerfile) สำหรับ build และรัน ตั้งค่าเชื่อมฐานข้อมูลผ่าน Environment ของบริการโฮสต์ โดยเว็บใช้ `prod` และ REST API ใช้ `api`
 
@@ -357,13 +363,17 @@ Co-Working-Space-Equipment-Rental/
 ├── test/
 │   ├── yuttana_673380422-8_03/java/
 │   ├── krittitee_673380572-9_04/java/
+│   ├── boonyapaween_673380588-4_03/java/
 │   ├── nuttachai_673380581-8_04/java/
 │   └── jiraphat_673380577-9_03/java/
 ├── doc/
-│   ├── krittitee_673380572-9_04/diagrams/
-│   ├── nuttachai_673380581-8_04/diagrams/
-│   ├── jiraphat_673380577-9_03/diagrams/
-│   └── test-report/
+│   ├── yuttana_673380422-8_03/          (README, Design Patterns, SOLID, API, diagrams/)
+│   ├── krittitee_673380572-9_04/        (README, Design Patterns, SOLID, API, diagrams/)
+│   ├── boonyapaween_673380588-4_03/     (README, Design Patterns, SOLID, API, diagrams/)
+│   ├── nuttachai_673380581-8_04/        (Design Patterns, SOLID, API, diagrams/)
+│   ├── jiraphat_673380577-9_03/         (README, Design Patterns, SOLID, Error Handling, diagrams/)
+│   ├── test-report/
+│   └── presentation.md
 ├── img/
 └── .github/workflows/
 ```
