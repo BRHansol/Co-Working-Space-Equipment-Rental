@@ -1,0 +1,26 @@
+# ---------- build stage ----------
+FROM maven:3.9-eclipse-temurin-17-alpine AS builder
+WORKDIR /app
+
+# copy pom ก่อน เพื่อให้ layer ของ dependency ถูก cache ไว้ ไม่ต้องโหลดใหม่ทุกครั้งที่แก้โค้ด
+COPY pom.xml .
+RUN mvn -B dependency:go-offline
+
+COPY src ./src
+# -Dmaven.test.skip=true ข้ามทั้งการคอมไพล์และรัน test (-DskipTests ยังคอมไพล์ test อยู่
+# ถ้า test ตัวไหนคอมไพล์ไม่ผ่าน image จะ build ไม่ได้) test ให้รันแยกด้วย mvn test ก่อน deploy
+RUN mvn -B clean package -Dmaven.test.skip=true
+
+# ---------- run stage ----------
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
+
+# ไม่รันแอปด้วย root
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring
+
+COPY --from=builder /app/target/*.jar app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

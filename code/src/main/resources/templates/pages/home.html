@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="th" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('หน้าแรก')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar('home')}"></header>
+<main id="main-content" class="page-shell">
+  <div th:replace="~{fragments/messages :: messages}"></div>
+  <section class="hero" aria-labelledby="hero-title">
+    <div><span class="eyebrow">Ready to work</span><h1 id="hero-title">พื้นที่พร้อม<br>อุปกรณ์ครบ<br>เริ่มงานได้เลย</h1><p>ค้นหาพื้นที่และอุปกรณ์ที่เหมาะกับงานคุณ</p><div class="actions"><a class="btn btn-primary" th:href="@{/rooms}" href="/rooms">ค้นหาพื้นที่ <span aria-hidden="true">→</span></a><a class="btn btn-text" th:href="@{/equipment}" href="/equipment">ดูอุปกรณ์ <span aria-hidden="true">↗</span></a></div></div>
+    <div class="hero-photo"><img th:src="@{/assets/img/room-focus.png}" src="/assets/img/room-focus.png" alt="ภาพประกอบพื้นที่ประชุมสว่าง พร้อมโต๊ะไม้และเก้าอี้สีเขียว" width="1536" height="1024" fetchpriority="high"></div>
+  </section>
+  <form class="card quick-search" method="get" th:action="@{/rooms}" action="/rooms">
+    <div class="quick-search-heading"><span aria-hidden="true">↗</span> เลือกเวลาที่เหมาะกับงานคุณ</div>
+    <div class="filter-grid">
+      <div class="field"><label for="home-date">วันที่</label><input id="home-date" type="date" name="date" th:value="${selectedDate}"></div>
+      <div class="field"><label for="home-start">เวลาเริ่ม</label><input id="home-start" type="time" name="startTime" th:value="${startTime ?: '09:00'}"></div>
+      <div class="field"><label for="home-end">เวลาสิ้นสุด</label><input id="home-end" type="time" name="endTime" th:value="${endTime ?: '11:00'}"></div>
+      <div class="field"><label for="home-capacity">จำนวนคน</label><input id="home-capacity" type="number" min="1" name="capacity" placeholder="เลือกจำนวนคน"></div>
+      <button class="btn btn-primary" type="submit">ค้นหาพื้นที่</button>
+    </div>
+  </form>
+  <section class="section-spacing" aria-labelledby="home-rooms-title">
+    <div class="section-title"><h2 id="home-rooms-title">พื้นที่สำหรับทุกไอเดีย</h2><a th:href="@{/rooms}" href="/rooms">ดูพื้นที่ทั้งหมด <span aria-hidden="true">→</span></a></div>
+    <div class="grid-3" th:if="${not #lists.isEmpty(rooms)}">
+      <article class="card catalog-card" th:each="room : ${rooms}">
+        <a th:href="@{/rooms/{id}(id=${room.id})}"><img class="catalog-card-image" th:src="@{/assets/img/room-focus.png}" alt="ภาพประกอบพื้นที่ประชุม" width="1536" height="1024" loading="lazy"></a>
+        <div class="catalog-card-body"><div class="catalog-card-label"><h3 th:text="${room.name}">ห้องประชุม</h3><span class="badge" th:text="${ui.roomTypeLabel(room.roomType)}">มาตรฐาน</span></div><p><span th:text="${room.capacity}">8</span> ที่นั่ง · ชั้น <span th:text="${room.floor}">2</span></p><a class="catalog-card-link" th:href="@{/rooms/{id}(id=${room.id})}">ดูรายละเอียด <span aria-hidden="true">→</span></a></div>
+      </article>
+    </div>
+    <div class="empty-state" th:if="${#lists.isEmpty(rooms)}"><h3>ยังไม่มีพื้นที่ให้เลือก</h3><p>กลับมาตรวจสอบรายการพื้นที่ได้อีกครั้ง</p></div>
+  </section>
+  <section class="section-spacing" aria-labelledby="home-equipment-title">
+    <div class="section-title"><h2 id="home-equipment-title">อุปกรณ์ที่ช่วยให้งานพร้อม</h2><a th:href="@{/equipment}" href="/equipment">ดูอุปกรณ์ทั้งหมด <span aria-hidden="true">→</span></a></div>
+    <div class="grid-3" th:if="${not #lists.isEmpty(equipmentList)}">
+      <article class="card catalog-card" th:each="item : ${equipmentList}"><a th:href="@{/equipment/{id}(id=${item.id})}"><img class="catalog-card-image" th:src="@{${ui.equipmentImage(item.name)}}" th:alt="${'ภาพประกอบ ' + item.name}" width="1536" height="1024" loading="lazy"></a><div class="catalog-card-body"><h3 th:text="${item.name}">อุปกรณ์</h3><p th:text="${item.category}">หมวดหมู่</p><a class="catalog-card-link" th:href="@{/equipment/{id}(id=${item.id})}">ดูรายละเอียด <span aria-hidden="true">→</span></a></div></article>
+    </div>
+    <div class="empty-state" th:if="${#lists.isEmpty(equipmentList)}"><h3>ยังไม่มีรายการอุปกรณ์</h3><p>สามารถจองพื้นที่โดยไม่เพิ่มอุปกรณ์ได้</p></div>
+  </section>
+  <section class="section-spacing how-it-works" aria-labelledby="home-steps-title"><h2 id="home-steps-title">เริ่มต้นง่าย ๆ<br>ใน 3 ขั้นตอน</h2><div class="how-step"><span class="how-step-number">1</span><span>เลือกพื้นที่<br>และอุปกรณ์</span></div><div class="how-step"><span class="how-step-number">2</span><span>ตรวจรายการ<br>และยืนยันการจอง</span></div><div class="how-step"><span class="how-step-number">3</span><span>ดูสถานะ<br>การจองของคุณ</span></div></section>
+  <p class="text-small muted" style="margin-top:14px">ห้องมาตรฐานอนุมัติทันทีเมื่อสร้างการจองสำเร็จ · ห้อง VIP รอผู้ดูแลระบบอนุมัติ</p>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

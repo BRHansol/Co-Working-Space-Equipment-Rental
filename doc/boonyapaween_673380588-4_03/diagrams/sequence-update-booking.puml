@@ -1,0 +1,57 @@
+@startuml sequence-update-booking
+skinparam dpi 150
+skinparam defaultFontName Loma
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam backgroundColor white
+skinparam ArrowColor #5B6770
+skinparam ClassBorderColor #5B6770
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassHeaderBackgroundColor #FFF4E8
+skinparam StateBorderColor #5B6770
+skinparam StateBackgroundColor #FFFFFF
+skinparam NoteBackgroundColor #FFF8E1
+skinparam NoteBorderColor #C9A227
+skinparam SequenceLifeLineBorderColor #9AA5AE
+skinparam ParticipantBorderColor #5B6770
+skinparam ParticipantBackgroundColor #FFF4E8
+skinparam ActorBorderColor #5B6770
+title Sequence: แก้ไขการจอง (PUT /api/v1/bookings/{id})
+autonumber
+
+actor User
+participant "BookingController" as C
+participant "BookingServiceImpl" as S
+participant "BookingRepository" as R
+participant "BookingContext" as X
+participant "BookingValidationChain" as V
+participant "BookingMapper" as M
+
+User -> C : PUT /bookings/{id}\nX-User-Id + BookingCreateRequest
+C -> S : updateBooking(id, request, requesterId)
+S -> S : findRequesterOrThrow(requesterId)
+S -> R : findById(id)
+R --> S : Booking
+S -> X : new BookingContext(booking).isEditable()
+
+alt สถานะไม่ใช่ PENDING
+  X --> S : false
+  S --> C : throw InvalidStateTransitionException(status, "edit")
+  C --> User : 409 Conflict\n"Cannot edit a booking in status APPROVED"
+else PENDING
+  X --> S : true
+  S -> S : request.setBookingId(id)
+  note right of S : ให้การตรวจเวลาซ้อนและอุปกรณ์\nไม่นับการจองของตัวเอง
+  S -> V : validate(context)
+  V --> S : context (room, equipment)
+  S -> M : updateEntity(booking, request, room)
+  S -> S : bookingEquipments.clear()
+  note right of S : orphanRemoval ลบแถวอุปกรณ์เดิม
+  S -> S : attachEquipment(booking, context)
+  S -> R : save(booking)
+  S -> M : toResponse(saved)
+  S --> C : BookingResponse
+  C --> User : 200 OK
+end
+@enduml

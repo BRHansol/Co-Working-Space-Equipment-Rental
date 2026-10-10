@@ -1,0 +1,36 @@
+@startuml
+title Use Cases — Booking Validation & Equipment Linking (Member 4)
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+actor "ผู้ทำรายการ" as Requester
+actor "STAFF / ADMIN" as Staff
+
+rectangle "ระบบจองห้องและอุปกรณ์ — ขอบเขตที่เกี่ยวข้องกับคนที่ 4" {
+  usecase "UC-01\nสร้างการจองพร้อมรายการอุปกรณ์" as Create
+  usecase "UC-02\nแก้ไขการจองและรายการอุปกรณ์" as Update
+  usecase "UC-03\nตรวจเงื่อนไขการจอง" as Validate #E0F2FE
+  usecase "UC-04\nผูก/แทนรายการอุปกรณ์" as Link #E0F2FE
+  usecase "UC-05\nจองแทนผู้ใช้อื่น" as ForOther
+}
+
+Requester -- Create
+Requester -- Update
+Staff -- Create
+Staff -- Update
+Staff -- ForOther
+Create ..> Validate : <<include>>
+Update ..> Validate : <<include>>
+Create ..> Link : <<include>>
+Update ..> Link : <<include>>
+ForOther ..> Create : <<extend>>\nbookingForUserId เป็นผู้ใช้อื่น
+
+note bottom of Validate
+  Member 4: ordered validation chain
+  permission -> room -> time overlap -> equipment
+end note
+note bottom of Link
+  Member 4: BookingEquipment + validated quantities
+  BookingService integration belongs to Member 3
+end note
+@enduml

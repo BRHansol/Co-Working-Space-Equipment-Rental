@@ -1,0 +1,12 @@
+target/
+.mvn/wrapper/maven-wrapper.jar
+.idea/
+.vscode/
+*.iml
+.local-data/
+.env
+.env.*
+*.pem
+*.key
+Environment variables
+.env

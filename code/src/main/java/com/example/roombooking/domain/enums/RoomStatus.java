@@ -1,5 +1,6 @@
 package com.example.roombooking.domain.enums;
 
-public class RoomStatus {
-
+public enum RoomStatus {
+    AVAILABLE,
+    MAINTENANCE
 }

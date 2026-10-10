@@ -1,0 +1,123 @@
+@startuml class-booking-core
+skinparam dpi 150
+skinparam defaultFontName Loma
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam backgroundColor white
+skinparam ArrowColor #5B6770
+skinparam ClassBorderColor #5B6770
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassHeaderBackgroundColor #FFF4E8
+skinparam StateBorderColor #5B6770
+skinparam StateBackgroundColor #FFFFFF
+skinparam NoteBackgroundColor #FFF8E1
+skinparam NoteBorderColor #C9A227
+skinparam SequenceLifeLineBorderColor #9AA5AE
+skinparam ParticipantBorderColor #5B6770
+skinparam ParticipantBackgroundColor #FFF4E8
+skinparam ActorBorderColor #5B6770
+title Class Diagram: Booking Core แยกตาม Layer
+top to bottom direction
+hide empty members
+skinparam packageStyle rectangle
+skinparam PackageBorderColor #9AA5AE
+skinparam PackageBackgroundColor #FFFDF9
+
+package "Presentation Layer (controller/api)" {
+  class BookingController <<RestController>> {
+    - bookingService : BookingService
+    + createBooking(requesterId, request) : ResponseEntity
+    + getBooking(id) : ResponseEntity
+    + getBookingsByRoom(roomId, pageable) : ResponseEntity
+    + getBookingsByUser(userId, pageable) : ResponseEntity
+    + updateBooking(id, requesterId, request) : ResponseEntity
+    + updateStatus(id, actorId, request) : ResponseEntity
+  }
+}
+
+package "Service Layer (service)" {
+  interface BookingService {
+    + createBooking(request, requesterId) : BookingResponse
+    + getBookingById(id) : BookingResponse
+    + getBookingsByRoom(roomId, pageable) : Page<BookingResponse>
+    + getBookingsByUser(userId, pageable) : Page<BookingResponse>
+    + updateBooking(id, request, requesterId) : BookingResponse
+    + updateStatus(id, targetStatus, actorId) : BookingResponse
+  }
+  class BookingServiceImpl <<Service>> {
+    - validate(request, requester) : BookingValidationContext
+    - attachEquipment(booking, context)
+    - findRequesterOrThrow(id) : User
+    - findBookingOrThrow(id) : Booking
+  }
+}
+
+package "Repository Layer (repository)" {
+  interface BookingRepository {
+    + findByRoomId(roomId, pageable) : Page<Booking>
+    + findByUserId(userId, pageable) : Page<Booking>
+    + findOverlappingBookings(roomId, start, end, statuses) : List<Booking>
+  }
+  interface JpaRepository
+}
+
+package "Domain Layer (domain)" {
+  class Booking <<Entity>> {
+    - id : Long
+    - startTime : LocalDateTime
+    - endTime : LocalDateTime
+    - status : BookingStatus
+    - purpose : String
+    - createdAt : LocalDateTime
+  }
+  enum BookingStatus {
+    PENDING
+    APPROVED
+    REJECTED
+    CANCELLED
+    COMPLETED
+  }
+  class BookingContext <<State Context>>
+  class User <<Entity>>
+  class MeetingRoom <<Entity>>
+  class BookingEquipment <<Entity>>
+}
+
+package "DTO + Mapper" {
+  class BookingCreateRequest <<DTO>>
+  class BookingStatusUpdateRequest <<DTO>>
+  class BookingResponse <<DTO>>
+  class BookingMapper <<Component>>
+}
+
+package "ส่วนของเพื่อนที่ service เรียกใช้" #F7F7F7 {
+  class BookingValidationChain <<Chain of Responsibility>>
+  class BookingRuleStrategyFactory <<Strategy>>
+  interface ApplicationEventPublisher <<Observer>>
+}
+
+BookingController --> BookingService
+BookingController ..> BookingCreateRequest
+BookingController ..> BookingStatusUpdateRequest
+BookingService <|.. BookingServiceImpl
+BookingServiceImpl --> BookingRepository
+BookingServiceImpl --> BookingMapper
+BookingServiceImpl --> BookingValidationChain
+BookingServiceImpl --> BookingRuleStrategyFactory
+BookingServiceImpl --> ApplicationEventPublisher
+BookingServiceImpl ..> BookingContext : เปลี่ยนสถานะ
+BookingRepository --|> JpaRepository : <Booking, Long>
+BookingMapper ..> BookingResponse
+BookingMapper ..> Booking
+Booking "*" --> "1" User : user
+Booking "*" --> "1" MeetingRoom : room
+Booking "1" *-- "*" BookingEquipment : bookingEquipments
+Booking --> BookingStatus
+BookingContext --> Booking
+
+note bottom of BookingRepository
+  derived query ไม่มี SQL/JPQL
+  findOverlappingBookings ใช้โดย TimeOverlapHandler
+end note
+@enduml

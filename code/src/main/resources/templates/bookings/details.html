@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="th" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('เลือกห้องและเวลา')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar('bookings')}"></header>
+<main id="main-content" class="page-shell">
+  <div class="page-heading"><div><p class="eyebrow">MAKE ROOM FOR YOUR IDEAS</p><h1>สร้างการจองใหม่</h1><p class="muted">เริ่มจากเลือกห้องและช่วงเวลาที่ต้องการใช้งาน</p></div></div>
+  <ol class="steps" aria-label="ขั้นตอนการจอง"><li class="step-active" aria-current="step"><span>1</span> ห้องและเวลา</li><li><span>2</span> อุปกรณ์เพิ่มเติม</li><li><span>3</span> ตรวจสอบและยืนยัน</li></ol>
+  <div th:replace="~{fragments/messages :: messages}"></div>
+  <div class="split-layout">
+    <form class="card" method="post" th:action="@{/bookings/new/details}" th:object="${detailsForm}">
+      <input type="hidden" name="_csrf" th:value="${csrfToken}">
+      <h2 class="section-title">ห้องและเวลา</h2>
+      <p class="muted">ช่องที่มี * จำเป็นต้องกรอก · เวลาในประเทศไทย</p>
+      <div th:replace="~{bookings/form-fields :: errors}"></div>
+      <div th:replace="~{bookings/form-fields :: detailsFields}"></div>
+      <div class="form-actions"><a class="btn btn-text" th:href="@{/rooms}">กลับไปเลือกห้อง</a><button type="submit" class="btn btn-primary">ถัดไป: เลือกอุปกรณ์ <span aria-hidden="true">→</span></button></div>
+    </form>
+    <aside class="summary-card card"><img class="card-media" src="/assets/img/room-focus.png" alt="" width="600" height="400"><p class="eyebrow">A THOUGHTFUL SPACE</p><h2>พื้นที่สำหรับทุกไอเดีย</h2><p>เลือกห้องให้เหมาะกับทีม และเพิ่มอุปกรณ์ได้ในขั้นตอนถัดไป</p><p class="notice">ห้องมาตรฐานอนุมัติทันทีเมื่อสร้างการจองสำเร็จ ส่วนห้อง VIP รอผู้ดูแลระบบอนุมัติ</p><small class="muted">ภาพประกอบบรรยากาศพื้นที่ทำงาน</small></aside>
+  </div>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

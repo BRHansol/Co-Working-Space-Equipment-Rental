@@ -1,0 +1,75 @@
+@startuml sequence-create-booking
+skinparam dpi 150
+skinparam defaultFontName Loma
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam backgroundColor white
+skinparam ArrowColor #5B6770
+skinparam ClassBorderColor #5B6770
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassHeaderBackgroundColor #FFF4E8
+skinparam StateBorderColor #5B6770
+skinparam StateBackgroundColor #FFFFFF
+skinparam NoteBackgroundColor #FFF8E1
+skinparam NoteBorderColor #C9A227
+skinparam SequenceLifeLineBorderColor #9AA5AE
+skinparam ParticipantBorderColor #5B6770
+skinparam ParticipantBackgroundColor #FFF4E8
+skinparam ActorBorderColor #5B6770
+title Sequence: สร้างการจอง (POST /api/v1/bookings)
+autonumber
+
+actor User
+participant "BookingController" as C
+participant "BookingServiceImpl" as S
+participant "UserRepository" as U
+participant "BookingValidationChain" as V
+participant "BookingMapper" as M
+participant "BookingRuleStrategyFactory" as F
+participant "BookingContext" as X
+participant "BookingRepository" as R
+
+User -> C : POST /bookings\nX-User-Id + BookingCreateRequest
+C -> S : createBooking(request, requesterId)
+S -> U : findById(requesterId)
+U --> S : requester
+S -> S : request.setBookingId(null)
+S -> V : validate(context)
+note right of V
+  1 UserPermissionHandler
+  2 RoomAvailabilityHandler (ใส่ห้องลง context)
+  3 TimeOverlapHandler
+     เรียก BookingRepository.findOverlappingBookings
+  4 EquipmentAvailabilityHandler (รวมจำนวนอุปกรณ์)
+end note
+
+alt ไม่ผ่านขั้นใดขั้นหนึ่ง
+  V --> S : throw (403 / 404 / 409 / 400)
+  S --> C : exception
+  C --> User : Error Response
+else ผ่านครบ 4 ขั้น
+  V --> S : context (room, equipment)
+  opt จองแทนผู้ใช้อื่น
+    S -> U : findById(bookingForUserId)
+  end
+  S -> M : toEntity(request, room, bookedFor)
+  M --> S : Booking (PENDING)
+  S -> S : attachEquipment(booking, context)
+  S -> F : getStrategy(roomType).requiresApproval()
+  alt ห้อง STANDARD (ไม่ต้องรออนุมัติ)
+    F --> S : false
+    S -> X : new BookingContext(booking).approve()
+    X -> X : PENDING ไป APPROVED
+  else ห้อง VIP
+    F --> S : true
+    note right of S : คง PENDING รอผู้ดูแลอนุมัติ
+  end
+  S -> R : save(booking)
+  note right of R : cascade บันทึก BookingEquipment ไปด้วย
+  R --> S : saved
+  S -> M : toResponse(saved)
+  S --> C : BookingResponse
+  C --> User : 201 Created
+end
+@enduml

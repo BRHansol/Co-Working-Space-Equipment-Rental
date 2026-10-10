@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="th" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('ข้อมูลบัญชี')}"></head>
+<body>
+<header th:replace="~{fragments/navbar :: navbar('account')}"></header>
+<main class="page-shell" id="main-content">
+    <div th:replace="~{fragments/messages :: messages}"></div>
+    <div class="page-heading"><h1>ข้อมูลบัญชี</h1><p>ข้อมูลผู้ใช้สำหรับการจองพื้นที่และอุปกรณ์</p></div>
+    <div class="split-layout">
+        <section class="card">
+            <h2 th:text="${currentUser.username}">ชื่อผู้ใช้</h2>
+            <dl class="summary-list">
+                <div><dt>ชื่อผู้ใช้</dt><dd th:text="${currentUser.username}"></dd></div>
+                <div><dt>อีเมล</dt><dd th:text="${currentUser.email}"></dd></div>
+                <div><dt>บทบาท</dt><dd th:text="${currentUser.role.name() == 'ADMIN' ? 'ผู้ดูแลระบบ' : (currentUser.role.name() == 'STAFF' ? 'เจ้าหน้าที่' : 'ผู้ใช้งานทั่วไป')}"></dd></div>
+                <div><dt>วันที่สร้างบัญชี</dt><dd th:text="${ui.date(currentUser.created_at)}"></dd></div>
+            </dl>
+            <form th:action="@{/logout}" method="post"><input type="hidden" name="_csrf" th:value="${csrfToken}"><button class="btn btn-secondary" type="submit">ออกจากระบบ</button></form>
+        </section>
+        <aside class="summary-card card"><h2>การจองของคุณ</h2><p>ดูสถานะและรายละเอียดคำขอจองของคุณ</p><a class="btn btn-primary" th:href="@{/bookings}">ดูการจองของฉัน</a><a class="btn btn-secondary" th:if="${isManager}" th:href="@{/admin}">เข้าสู่หน้าผู้ดูแล</a></aside>
+    </div>
+</main>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

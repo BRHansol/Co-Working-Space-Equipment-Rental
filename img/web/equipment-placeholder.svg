@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="ภาพประกอบอุปกรณ์">
+  <rect width="1200" height="800" fill="#EDF1E8"/>
+  <circle cx="600" cy="400" r="170" fill="#D7F57A" opacity=".45"/>
+  <g fill="none" stroke="#173F35" stroke-width="10" stroke-linejoin="round"><path d="M480 345 600 275 720 345 720 485 600 555 480 485Z"/><path d="M480 345 600 415 720 345M600 415V555M540 310 660 380"/></g>
+</svg>
