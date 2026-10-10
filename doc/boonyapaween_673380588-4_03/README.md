@@ -12,11 +12,16 @@
 | ไฟล์ | เนื้อหา |
 |---|---|
 | [solid-analysis.md](solid-analysis.md) | SOLID ที่ปรากฏในส่วนงานนี้ พร้อมไฟล์และบรรทัด |
-| [design-patterns.md](design-patterns.md) | State Pattern และ Enterprise Pattern ในส่วน Booking Core |
+| [design-patterns.md](design-patterns.md) | State Pattern และ Enterprise Pattern ในส่วน Booking Core พร้อม Class Diagram |
 | [api-booking.md](api-booking.md) | Endpoint ของ Booking, request/response, status code, pagination |
-| [diagrams/class-state.md](diagrams/class-state.md) | Class Diagram ของ State Pattern |
-| [diagrams/state-booking.md](diagrams/state-booking.md) | State Diagram ของการจองจากมุม State Pattern |
+| [diagrams/class-booking-core.md](diagrams/class-booking-core.md) | Class Diagram: Booking Core แยกตาม Layer |
+| [diagrams/class-state.md](diagrams/class-state.md) | Class Diagram: State Pattern |
+| [diagrams/state-booking.md](diagrams/state-booking.md) | State Diagram: วงจรสถานะการจอง + ตาราง transition 20 คู่ |
+| [diagrams/sequence-create-booking.md](diagrams/sequence-create-booking.md) | Sequence: สร้างการจอง (Chain, Strategy, State) |
+| [diagrams/sequence-update-booking.md](diagrams/sequence-update-booking.md) | Sequence: แก้ไขการจอง (เฉพาะ PENDING) |
 | [diagrams/sequence-update-status.md](diagrams/sequence-update-status.md) | Sequence: เปลี่ยนสถานะสำเร็จ และเปลี่ยนผิดกฎได้ 409 |
+| `diagrams/*.puml` | ซอร์ส PlantUML ของทั้ง 6 diagram |
+| `diagrams/png/` | รูป PNG ของทั้ง 6 diagram ไว้ใส่สไลด์ |
 
 ## โค้ดที่รับผิดชอบ
 
@@ -42,15 +47,27 @@ code/src/main/java/com/example/roombooking/
 
 ## การทดสอบ (Tests)
 
+ผลจาก [Test Report ของทีม](../test-report/README.md): **4 classes, 61 tests ผ่านทั้งหมด**
+
+| Test class | ประเภท | Tests | ทดสอบอะไร |
+|---|---|---:|---|
+| `BookingStateTest` | JUnit 5 (`@ParameterizedTest`) | 27 | ครบ 20 คู่ (5 สถานะ × 4 action), แก้ไขได้เฉพาะ PENDING 5 กรณี, context ทำงานต่อเนื่อง 2 กรณี |
+| `BookingServiceImplTest` | Mockito | 19 | create, read, update, updateStatus ทั้งทางสำเร็จและทาง error, event ส่งพร้อมค่าถูกต้อง |
+| `BookingControllerTest` | `@WebMvcTest`, MockMvc | 8 | URL, status code 201/200/409, header `X-User-Id`, pagination และ sorting |
+| `BookingRepositoryTest` | `@DataJpaTest` + H2 | 7 | query เวลาซ้อนบนฐานข้อมูลจริง (ชน, ต่อกันพอดี, สถานะที่ยกเลิก, ห้องอื่น), แบ่งหน้าและเรียงลำดับ |
+| **รวม** | | **61** | |
+
 ```
 test/boonyapaween_673380588-4_03/java/com/example/roombooking/
-├── domain/state/BookingStateTest.java          ครบ 20 คู่ (5 สถานะ × 4 action)
-├── service/impl/BookingServiceImplTest.java    create, read, update, updateStatus (Mockito)
-├── controller/api/BookingControllerTest.java   URL, status code, header, pagination (@WebMvcTest)
-└── repository/BookingRepositoryTest.java       query เวลาซ้อน, แบ่งหน้า, เรียงลำดับ (@DataJpaTest + H2)
+├── domain/state/BookingStateTest.java
+├── service/impl/BookingServiceImplTest.java
+├── controller/api/BookingControllerTest.java
+└── repository/BookingRepositoryTest.java
 ```
 
-รันเฉพาะ test ของส่วนนี้จากโฟลเดอร์ `code/`
+### วิธีรันการทดสอบ
+
+รันเฉพาะ test ของส่วนนี้จากโฟลเดอร์ `code/` (ไม่ต้องต่อฐานข้อมูลจริง ใช้ mock และ H2)
 
 ```powershell
 .\mvnw.cmd test -P boonyapaween_673380588-4_03
