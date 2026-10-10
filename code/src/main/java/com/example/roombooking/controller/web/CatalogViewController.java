@@ -3,9 +3,7 @@ package com.example.roombooking.controller.web;
 import com.example.roombooking.controller.web.support.WebSessionSupport;
 import com.example.roombooking.domain.enums.*;
 import com.example.roombooking.dto.response.*;
-import com.example.roombooking.exception.ResourceNotFoundException;
 import com.example.roombooking.repository.BookingRepository;
-import com.example.roombooking.repository.EquipmentRepository;
 import com.example.roombooking.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Profile;
@@ -24,12 +22,11 @@ public class CatalogViewController {
     private final EquipmentService equipment;
     private final BookingService bookings;
     private final BookingRepository bookingRepository;
-    private final EquipmentRepository equipmentRepository;
     private final WebSessionSupport sessions;
     public CatalogViewController(RoomService rooms, EquipmentService equipment, BookingService bookings,
-            BookingRepository bookingRepository, EquipmentRepository equipmentRepository, WebSessionSupport sessions) {
+            BookingRepository bookingRepository, WebSessionSupport sessions) {
         this.rooms = rooms; this.equipment = equipment; this.bookings = bookings;
-        this.bookingRepository = bookingRepository; this.equipmentRepository = equipmentRepository; this.sessions = sessions;
+        this.bookingRepository = bookingRepository; this.sessions = sessions;
     }
     @GetMapping("/") public String home(Model model) {
         model.addAttribute("rooms", allRooms().stream().filter(r -> r.getStatus() == RoomStatus.AVAILABLE).limit(3).toList());
@@ -97,7 +94,7 @@ public class CatalogViewController {
         model.addAttribute("q", q); model.addAttribute("category", category); return "equipment/list";
     }
     @GetMapping("/equipment/{id}") public String equipmentDetail(@PathVariable Long id, Model model) {
-        if (!equipmentRepository.existsById(id)) throw new ResourceNotFoundException("ไม่พบอุปกรณ์");
+        // ไม่ต้องเช็ก existsById ก่อน: service โยน ResourceNotFoundException เอง แล้ว WebViewAdvice แปลงเป็น 404
         model.addAttribute("equipment", equipment.getEquipmentById(id));
         model.addAttribute("equipmentList", allEquipment().stream().filter(e -> !e.getId().equals(id)).limit(3).toList());
         return "equipment/detail";

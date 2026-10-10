@@ -6,7 +6,7 @@ import com.example.roombooking.domain.entity.Booking;
 import com.example.roombooking.domain.enums.*;
 import com.example.roombooking.dto.response.*;
 import com.example.roombooking.repository.BookingRepository;
-import com.example.roombooking.repository.EquipmentRepository;
+import com.example.roombooking.exception.ResourceNotFoundException;
 import com.example.roombooking.service.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,15 +28,14 @@ class CatalogViewControllerTest {
     private EquipmentService equipment;
     private BookingService bookings;
     private BookingRepository bookingRepository;
-    private EquipmentRepository equipmentRepository;
     private MockMvc mvc;
 
     @BeforeEach
     void setUp() {
         rooms = mock(RoomService.class); equipment = mock(EquipmentService.class); bookings = mock(BookingService.class);
-        bookingRepository = mock(BookingRepository.class); equipmentRepository = mock(EquipmentRepository.class);
+        bookingRepository = mock(BookingRepository.class);
         WebSessionSupport sessions = mock(WebSessionSupport.class);
-        mvc = MockMvcBuilders.standaloneSetup(new CatalogViewController(rooms, equipment, bookings, bookingRepository, equipmentRepository, sessions))
+        mvc = MockMvcBuilders.standaloneSetup(new CatalogViewController(rooms, equipment, bookings, bookingRepository, sessions))
                 .setControllerAdvice(new WebViewAdvice(sessions)).build();
     }
 
@@ -77,15 +76,37 @@ class CatalogViewControllerTest {
     }
 
     @Test
-    void missingEquipmentHasNotFoundPageBeforeBackendLookup() throws Exception {
-        when(equipmentRepository.existsById(999L)).thenReturn(false);
+    void missingEquipmentShowsNotFoundPageFromServiceException() throws Exception {
+        when(equipment.getEquipmentById(999L)).thenThrow(new ResourceNotFoundException("Equipment not found"));
         mvc.perform(get("/equipment/999")).andExpect(status().isNotFound()).andExpect(view().name("common/error"));
-        verifyNoInteractions(equipment);
+        verify(equipment).getEquipmentById(999L);
+        verify(equipment, never()).getAllEquipments(any(Pageable.class));
+    }
+
+    @Test
+    void existingEquipmentShowsDetailWithOtherEquipmentOnly() throws Exception {
+        EquipmentResponse projector = equipmentItem(1L, "Projector");
+        EquipmentResponse microphone = equipmentItem(2L, "Microphone");
+        EquipmentResponse speaker = equipmentItem(3L, "Speaker");
+        when(equipment.getEquipmentById(1L)).thenReturn(projector);
+        when(equipment.getAllEquipments(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(projector, microphone, speaker)));
+        mvc.perform(get("/equipment/1"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("equipment/detail"))
+                .andExpect(model().attribute("equipment", projector))
+                .andExpect(model().attribute("equipmentList", List.of(microphone, speaker)));
+        verify(equipment).getEquipmentById(1L);
     }
 
     private RoomResponse room(Long id, RoomStatus status) {
         RoomResponse room = new RoomResponse(); room.setId(id); room.setName("Focus " + id); room.setCapacity(6);
         room.setFloor("2"); room.setRoomType(RoomType.STANDARD); room.setStatus(status); return room;
+    }
+
+    private EquipmentResponse equipmentItem(Long id, String name) {
+        EquipmentResponse item = new EquipmentResponse(); item.setId(id); item.setName(name);
+        item.setTotalQuantity(5); item.setCategory("AV"); return item;
     }
 
     private BookingResponse booking(Long id, BookingStatus status, LocalDateTime start, LocalDateTime end) {
