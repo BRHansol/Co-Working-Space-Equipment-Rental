@@ -296,9 +296,10 @@ Linux/macOS ใช้ `sh ./mvnw clean test` หากต้องการต�
 
 | บริการ | URL |
 | --- | --- |
-| หน้าเว็บ | [web-service-m1fz.onrender.com](https://web-service-m1fz.onrender.com) |
-| REST API — รายการห้อง | [room-booking-api-k47v.onrender.com/api/v1/rooms](https://room-booking-api-k47v.onrender.com/api/v1/rooms) |
-| Swagger UI | [room-booking-api-k47v.onrender.com/swagger-ui.html](https://room-booking-api-k47v.onrender.com/swagger-ui.html) |
+| [doc/yuttana_673380422-8_03/](doc/yuttana_673380422-8_03/README.md) | User & UserProfile (1:1), Authentication, SOLID Analysis, Design Patterns, API Docs, Class/Sequence/ER Diagram |
+| [doc/diagrams/nuttachai_673380581-8_04/](doc/diagrams/nuttachai_673380581-8_04/README.md) | Use Case, Domain/Class, Sequence, Activity (validation), ER, Component/Deployment, State Diagram |
+| [doc/krittitee_673380572-9_04/](doc/krittitee_673380572-9_04/README.md) | Room/Equipment, Strategy Pattern, SOLID Analysis, Class/Sequence Diagram |
+| [doc/jiraphat_673380577-9_03/](doc/jiraphat_673380577-9_03/README.md) | Observer Pattern, SOLID Analysis, Error Handling, Component/Deployment Diagram, How to Run/Deploy |
 
 แอปใช้ [Dockerfile](code/Dockerfile) สำหรับ build และรัน ตั้งค่าเชื่อมฐานข้อมูลผ่าน Environment ของบริการโฮสต์ โดยเว็บใช้ `prod` และ REST API ใช้ `api`
 
