@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.example.roombooking.integration.RoomEquipmentApiIntegrationTest
+-------------------------------------------------------------------------------
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.40 s -- in com.example.roombooking.integration.RoomEquipmentApiIntegrationTest

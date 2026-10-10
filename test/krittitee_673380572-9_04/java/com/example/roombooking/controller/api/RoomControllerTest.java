@@ -120,4 +120,20 @@ class RoomControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409));
     }
+
+    @Test
+    void createRoom_capacityAboveIntegerMax_returns400AndDoesNotCallService() throws Exception {
+        // Robustness testing: capacity max+ (2147483648) ใส่ลง Integer ไม่ได้ ต้องถูกตีกลับเป็น 400 ไม่ใช่ 500
+        String overflowJson = """
+                {"name":"Room A","capacity":2147483648,"floor":"2","roomType":"STANDARD","status":"AVAILABLE"}
+                """;
+
+        mockMvc.perform(post("/api/v1/rooms")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(overflowJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+
+        verify(roomService, never()).createRoom(any(RoomCreateRequest.class));
+    }
 }

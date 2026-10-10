@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.example.roombooking.controller.api.RoomControllerTest
+-------------------------------------------------------------------------------
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.368 s -- in com.example.roombooking.controller.api.RoomControllerTest

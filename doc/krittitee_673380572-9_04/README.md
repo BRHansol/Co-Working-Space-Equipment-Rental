@@ -14,6 +14,7 @@
 | [solid-analysis.md](solid-analysis.md) | SOLID ที่ปรากฏในส่วนงานนี้ พร้อมไฟล์และบรรทัด |
 | [design-patterns.md](design-patterns.md) | Strategy (+ Factory ที่ใช้เลือก strategy) พร้อม Class Diagram |
 | [api-room-equipment.md](api-room-equipment.md) | Endpoint ของ Room และ Equipment, request/response, status code |
+| [white-box-testing.md](white-box-testing.md) | Control Flow Graph, Cyclomatic Complexity, Basis Path และ JaCoCo coverage |
 | [diagrams/class-strategy.md](diagrams/class-strategy.md) | Class Diagram ของ Strategy |
 | [diagrams/sequence-create-booking.md](diagrams/sequence-create-booking.md) | Sequence: สร้างการจองแล้วเลือกกฎตามประเภทห้อง |
 | [diagrams/sequence-delete-room-409.md](diagrams/sequence-delete-room-409.md) | Sequence: ลบห้องที่มีการจองอยู่ ได้ 409 |
@@ -40,16 +41,20 @@ code/src/main/java/com/example/roombooking/
 
 ## Test
 
-เทสต์อยู่ที่ `test/krittitee_673380572-9_04/java/` (รวม 39 test cases)
+เทสต์อยู่ที่ `test/krittitee_673380572-9_04/java/` แบ่งตามเทคนิคที่เรียนในวิชา SQA
 
-| ไฟล์ | ทดสอบอะไร |
-|---|---|
-| `service/impl/RoomServiceImplTest` | CRUD ห้อง, หาไม่เจอ → `ResourceNotFoundException`, ลบห้องที่มีการจอง → `ConflictException` |
-| `service/impl/EquipmentServiceImplTest` | CRUD อุปกรณ์, จำนวนติดลบ, 404, ลบอุปกรณ์ที่ถูกจอง → `ConflictException` |
-| `service/strategy/BookingRuleStrategyTest` | STANDARD ไม่ต้องอนุมัติ, VIP ต้องอนุมัติ, Factory เลือกถูกตัว |
-| `service/impl/BookingServiceImplStrategyTest` | สร้างการจองห้อง STANDARD ได้ APPROVED, ห้อง VIP ได้ PENDING (และสถานะถูก save จริง) |
-| `controller/api/RoomControllerTest` | ผ่าน HTTP: 201, 400 (`@Valid`), 404, 204, 409 |
-| `controller/api/EquipmentControllerTest` | ผ่าน HTTP: 201, 400 (`@Valid` ทั้ง POST และ PUT), 404, 409 |
+| ไฟล์ | เทคนิค | ทดสอบอะไร |
+|---|---|---|
+| `service/impl/RoomServiceImplTest` | Unit test + Test double (Stub, Mock) | CRUD ห้อง, 404, ลบห้องที่มีการจอง → `ConflictException` |
+| `service/impl/EquipmentServiceImplTest` | Unit test + Test double (Stub, Mock) | CRUD อุปกรณ์, จำนวนติดลบ, 404, ลบอุปกรณ์ที่ถูกจอง → `ConflictException` |
+| `service/strategy/BookingRuleStrategyTest` | Unit test, Decision table | STANDARD/VIP, Factory เลือก strategy ถูกตัว |
+| `service/impl/BookingServiceImplStrategyTest` | Unit test + Test double (Stub, Mock, Dummy) | จองห้อง STANDARD ได้ APPROVED, ห้อง VIP ได้ PENDING |
+| `controller/api/RoomControllerTest` | API test (MockMvc) | 201, 400 (`@Valid`, capacity เกิน Integer), 404, 204, 409 |
+| `controller/api/EquipmentControllerTest` | API test (MockMvc) | 201, 400 (`@Valid` ทั้ง POST และ PUT), 404, 409 |
+| `dto/request/RoomCreateRequestBoundaryTest` | Boundary value: normal, robustness, worst-case, robust worst-case | ความยาว name × capacity |
+| `dto/request/EquipmentCreateRequestBoundaryTest` | Boundary value: normal, robustness | ความยาว name × totalQuantity |
+| `dto/request/CreateRequestEquivalenceClassTest` | Equivalence class (single fault) | ทุก EC ของ Room และ Equipment ผิดทีละ field |
+| `integration/RoomEquipmentApiIntegrationTest` | Integration test + Fake (H2 database) | ยิง HTTP ถึง database จริง ลบของที่มีการจองต้องได้ 409 และข้อมูลยังอยู่ |
 
 ### วิธีรัน
 
@@ -58,7 +63,8 @@ cd code
 ./mvnw clean test -P krittitee_673380572-9_04
 ```
 
-Test report อยู่ที่ `code/target/krittitee_673380572-9_04-surefire-reports/`
+- Test report: `code/target/krittitee_673380572-9_04-surefire-reports/`
+- Coverage report: `code/target/krittitee_673380572-9_04-jacoco/index.html`
 
 ## ตอบคำถามตอนนำเสนอ
 

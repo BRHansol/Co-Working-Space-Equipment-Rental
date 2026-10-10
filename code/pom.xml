@@ -177,7 +177,7 @@
             </build>
         </profile>
         <!-- Tests owned by krittitee_673380572-9_04 (Room / Equipment / booking rule Strategy).
-             Run with: ./mvnw test -P krittitee_673380572-9_04 -->
+             Run with: ./mvnw clean test -P krittitee_673380572-9_04 (includes JaCoCo coverage) -->
         <profile>
             <id>krittitee_673380572-9_04</id>
             <properties>
@@ -193,6 +193,46 @@
                         <configuration>
                             <reportsDirectory>${project.build.directory}/krittitee_673380572-9_04-surefire-reports</reportsDirectory>
                         </configuration>
+                    </plugin>
+                    <!-- Code coverage (white-box) ของส่วน Room / Equipment / Strategy
+                         report: target/krittitee_673380572-9_04-jacoco/index.html -->
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.8.15</version>
+                        <executions>
+                            <execution>
+                                <id>krittitee-coverage-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                                <configuration>
+                                    <destFile>${java.io.tmpdir}/krittitee_673380572-9_04-jacoco.exec</destFile>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>krittitee-coverage-report</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <configuration>
+                                    <dataFile>${java.io.tmpdir}/krittitee_673380572-9_04-jacoco.exec</dataFile>
+                                    <outputDirectory>${project.build.directory}/krittitee_673380572-9_04-jacoco</outputDirectory>
+                                    <includes>
+                                        <include>com/example/roombooking/controller/api/RoomController*</include>
+                                        <include>com/example/roombooking/controller/api/EquipmentController*</include>
+                                        <include>com/example/roombooking/service/impl/RoomServiceImpl*</include>
+                                        <include>com/example/roombooking/service/impl/EquipmentServiceImpl*</include>
+                                        <include>com/example/roombooking/service/strategy/*</include>
+                                        <include>com/example/roombooking/dto/request/RoomCreateRequest*</include>
+                                        <include>com/example/roombooking/dto/request/EquipmentCreateRequest*</include>
+                                        <include>com/example/roombooking/mapper/RoomMapper*</include>
+                                        <include>com/example/roombooking/mapper/EquipmentMapper*</include>
+                                    </includes>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>

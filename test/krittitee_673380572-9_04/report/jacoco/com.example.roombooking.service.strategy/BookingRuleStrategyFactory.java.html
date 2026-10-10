@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BookingRuleStrategyFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">roombooking</a> &gt; <a href="index.source.html" class="el_package">com.example.roombooking.service.strategy</a> &gt; <span class="el_source">BookingRuleStrategyFactory.java</span></div><h1>BookingRuleStrategyFactory.java</h1><pre class="source lang-java linenums">package com.example.roombooking.service.strategy;
+
+import com.example.roombooking.domain.enums.RoomType;
+import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Component
+public class BookingRuleStrategyFactory {
+
+<span class="fc" id="L13">    private final Map&lt;RoomType, BookingRuleStrategy&gt; strategies = new HashMap&lt;&gt;();</span>
+
+    // Spring ส่ง strategy ทุกตัวที่เป็น @Component เข้ามาให้เอง
+<span class="fc" id="L16">    public BookingRuleStrategyFactory(List&lt;BookingRuleStrategy&gt; strategyList) {</span>
+<span class="fc bfc" id="L17" title="All 2 branches covered.">        for (BookingRuleStrategy strategy : strategyList) {</span>
+<span class="fc" id="L18">            strategies.put(strategy.getRoomType(), strategy);</span>
+<span class="fc" id="L19">        }</span>
+<span class="fc" id="L20">    }</span>
+
+    public BookingRuleStrategy getStrategy(RoomType roomType) {
+<span class="fc" id="L23">        BookingRuleStrategy strategy = strategies.get(roomType);</span>
+<span class="fc bfc" id="L24" title="All 2 branches covered.">        if (strategy == null) {</span>
+<span class="fc" id="L25">            throw new IllegalArgumentException(&quot;ไม่มี strategy สำหรับห้องประเภท &quot; + roomType);</span>
+        }
+<span class="fc" id="L27">        return strategy;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
