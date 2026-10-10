@@ -376,6 +376,7 @@ Render build image จาก `code/Dockerfile` ถ้า service ใหม่เ
 
 | โฟลเดอร์ | เนื้อหา |
 | --- | --- |
+| [doc/yuttana_673380422-8_03/](doc/yuttana_673380422-8_03/README.md) | User & UserProfile (1:1), Authentication, SOLID Analysis, Design Patterns, API Docs, Class/Sequence/ER Diagram |
 | [doc/diagrams/nuttachai_673380581-8_04/](doc/diagrams/nuttachai_673380581-8_04/README.md) | Use Case, Domain/Class, Sequence, Activity (validation), ER, Component/Deployment, State Diagram |
 | [doc/krittitee_673380572-9_04/](doc/krittitee_673380572-9_04/README.md) | Room/Equipment, Strategy Pattern, SOLID Analysis, Class/Sequence Diagram |
 | [doc/jiraphat_673380577-9_03/](doc/jiraphat_673380577-9_03/README.md) | Observer Pattern, SOLID Analysis, Error Handling, Component/Deployment Diagram, How to Run/Deploy |
