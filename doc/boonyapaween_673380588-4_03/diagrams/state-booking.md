@@ -24,4 +24,4 @@
 
 `PATCH /api/v1/bookings/{id}/status` ด้วย `"status": "PENDING"` ถูกปฏิเสธใน `BookingServiceImpl.updateStatus()` ก่อนแตะฐานข้อมูล ได้ 400 เพราะไม่มีสถานะใดย้อนกลับไป PENDING ได้
 
-State Diagram ฝั่ง validation ดูเพิ่มที่ [`../nuttachai_673380581-8_04/diagrams/07-booking-state.md`](../nuttachai_673380581-8_04/diagrams/07-booking-state.md)
+State Diagram ฝั่ง validation ดูเพิ่มที่ [`../../nuttachai_673380581-8_04/diagrams/07-booking-state.md`](../../nuttachai_673380581-8_04/diagrams/07-booking-state.md)
