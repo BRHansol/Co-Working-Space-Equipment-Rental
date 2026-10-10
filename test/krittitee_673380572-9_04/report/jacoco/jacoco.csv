@@ -1,0 +1,12 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+roombooking,com.example.roombooking.service.strategy,VipRoomRuleStrategy,0,7,0,0,0,3,0,3,0,3
+roombooking,com.example.roombooking.service.strategy,BookingRuleStrategyFactory,0,43,0,4,0,10,0,4,0,2
+roombooking,com.example.roombooking.service.strategy,StandardRoomRuleStrategy,0,7,0,0,0,3,0,3,0,3
+roombooking,com.example.roombooking.controller.api,EquipmentController,19,22,0,0,3,6,3,3,3,3
+roombooking,com.example.roombooking.controller.api,RoomController,19,22,0,0,3,6,3,3,3,3
+roombooking,com.example.roombooking.mapper,EquipmentMapper,0,43,0,0,0,12,0,3,0,3
+roombooking,com.example.roombooking.mapper,RoomMapper,0,59,0,0,0,16,0,3,0,3
+roombooking,com.example.roombooking.dto.request,RoomCreateRequest,0,38,0,0,0,11,0,11,0,11
+roombooking,com.example.roombooking.dto.request,EquipmentCreateRequest,0,24,0,0,0,7,0,7,0,7
+roombooking,com.example.roombooking.service.impl,RoomServiceImpl,0,114,0,0,0,27,0,8,0,8
+roombooking,com.example.roombooking.service.impl,EquipmentServiceImpl,0,132,2,6,0,30,2,10,0,8

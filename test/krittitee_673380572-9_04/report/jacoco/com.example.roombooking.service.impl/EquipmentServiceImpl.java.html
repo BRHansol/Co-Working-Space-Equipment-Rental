@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EquipmentServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">roombooking</a> &gt; <a href="index.source.html" class="el_package">com.example.roombooking.service.impl</a> &gt; <span class="el_source">EquipmentServiceImpl.java</span></div><h1>EquipmentServiceImpl.java</h1><pre class="source lang-java linenums">package com.example.roombooking.service.impl;
+
+import com.example.roombooking.domain.entity.Equipment;
+import com.example.roombooking.dto.request.EquipmentCreateRequest;
+import com.example.roombooking.dto.response.EquipmentResponse;
+import com.example.roombooking.exception.ConflictException;
+import com.example.roombooking.exception.ResourceNotFoundException;
+import com.example.roombooking.mapper.EquipmentMapper;
+import com.example.roombooking.repository.EquipmentRepository;
+import com.example.roombooking.service.EquipmentService;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class EquipmentServiceImpl implements EquipmentService {
+
+    private final EquipmentRepository equipmentRepository;
+    private final EquipmentMapper equipmentMapper;
+
+<span class="fc" id="L23">    public EquipmentServiceImpl(EquipmentRepository equipmentRepository, EquipmentMapper equipmentMapper) {</span>
+<span class="fc" id="L24">        this.equipmentRepository = equipmentRepository;</span>
+<span class="fc" id="L25">        this.equipmentMapper = equipmentMapper;</span>
+<span class="fc" id="L26">    }</span>
+
+    @Override
+    @Transactional
+    public EquipmentResponse createEquipment(EquipmentCreateRequest request) {
+<span class="pc bpc" id="L31" title="1 of 4 branches missed.">        if (request.getTotalQuantity() != null &amp;&amp; request.getTotalQuantity() &lt; 0) {</span>
+<span class="fc" id="L32">            throw new IllegalArgumentException(&quot;Total quantity cannot be negative&quot;);</span>
+        }
+<span class="fc" id="L34">        Equipment equipment = equipmentMapper.toEntity(request);</span>
+<span class="fc" id="L35">        Equipment savedEquipment = equipmentRepository.save(equipment);</span>
+<span class="fc" id="L36">        return equipmentMapper.toResponse(savedEquipment);</span>
+    }
+
+    @Override
+    public EquipmentResponse getEquipmentById(Long id) {
+<span class="fc" id="L41">        Equipment equipment = findEquipmentOrThrow(id);</span>
+<span class="fc" id="L42">        return equipmentMapper.toResponse(equipment);</span>
+    }
+
+    @Override
+    public Page&lt;EquipmentResponse&gt; getAllEquipments(Pageable pageable) {
+<span class="fc" id="L47">        return equipmentRepository.findAll(pageable)</span>
+<span class="fc" id="L48">                .map(equipmentMapper::toResponse);</span>
+    }
+
+    @Override
+    @Transactional
+    public EquipmentResponse updateEquipment(Long id, EquipmentCreateRequest request) {
+<span class="fc" id="L54">        Equipment existingEquipment = findEquipmentOrThrow(id);</span>
+
+<span class="pc bpc" id="L56" title="1 of 4 branches missed.">        if (request.getTotalQuantity() != null &amp;&amp; request.getTotalQuantity() &lt; 0) {</span>
+<span class="fc" id="L57">            throw new IllegalArgumentException(&quot;Total quantity cannot be negative&quot;);</span>
+        }
+
+<span class="fc" id="L60">        existingEquipment.setName(request.getName());</span>
+<span class="fc" id="L61">        existingEquipment.setTotalQuantity(request.getTotalQuantity());</span>
+<span class="fc" id="L62">        existingEquipment.setCategory(request.getCategory());</span>
+
+<span class="fc" id="L64">        Equipment updatedEquipment = equipmentRepository.save(existingEquipment);</span>
+<span class="fc" id="L65">        return equipmentMapper.toResponse(updatedEquipment);</span>
+    }
+
+    @Override
+    @Transactional
+    public void deleteEquipment(Long id) {
+<span class="fc" id="L71">        Equipment existingEquipment = findEquipmentOrThrow(id);</span>
+        try {
+<span class="fc" id="L73">            equipmentRepository.delete(existingEquipment);</span>
+            // flush ทันที เพื่อให้ foreign key ชนตรงนี้ (ไม่ใช่ตอน commit) แล้วจับได้ใน try
+<span class="fc" id="L75">            equipmentRepository.flush();</span>
+<span class="fc" id="L76">        } catch (DataIntegrityViolationException ex) {</span>
+<span class="fc" id="L77">            throw new ConflictException(</span>
+                    &quot;ไม่สามารถลบอุปกรณ์ได้ เพราะมีการจองที่ใช้อุปกรณ์นี้อยู่ (id: &quot; + id + &quot;)&quot;);
+<span class="fc" id="L79">        }</span>
+<span class="fc" id="L80">    }</span>
+
+    private Equipment findEquipmentOrThrow(Long id) {
+<span class="fc" id="L83">        return equipmentRepository.findById(id)</span>
+<span class="fc" id="L84">                .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
+                        &quot;Equipment not found with id: &quot; + id));
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.15.202606040825</span></div></body></html>
