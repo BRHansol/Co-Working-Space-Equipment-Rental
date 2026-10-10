@@ -219,6 +219,27 @@
                 </plugins>
             </build>
         </profile>
+        <!-- Tests owned by boonyapaween_673380588-4_03 (Booking core / State / pagination).
+             Run with: ./mvnw test -P boonyapaween_673380588-4_03 -->
+        <profile>
+            <id>boonyapaween_673380588-4_03</id>
+            <properties>
+                <roombooking.testSourceDirectory>${project.basedir}/../test/boonyapaween_673380588-4_03/java</roombooking.testSourceDirectory>
+                <roombooking.testOutputDirectory>${project.build.directory}/boonyapaween_673380588-4_03-test-classes</roombooking.testOutputDirectory>
+                <roombooking.skipMemberTestSources>true</roombooking.skipMemberTestSources>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <reportsDirectory>${project.build.directory}/boonyapaween_673380588-4_03-surefire-reports</reportsDirectory>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 
 </project>
