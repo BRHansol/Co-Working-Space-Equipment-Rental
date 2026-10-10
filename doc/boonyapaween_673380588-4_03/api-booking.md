@@ -105,3 +105,11 @@ GET /api/v1/rooms/3/bookings?page=0&size=10&sort=startTime,desc
 4. `PATCH .../status` `COMPLETED` ได้ 200
 5. `PATCH .../status` `CANCELLED` ได้ 409 `Cannot cancel a booking in status COMPLETED`
 6. `GET /api/v1/rooms/{id}/bookings?page=0&size=2&sort=startTime,desc`
+
+## Sequence Diagram
+
+| Endpoint | Diagram |
+|---|---|
+| `POST /api/v1/bookings` | [diagrams/sequence-create-booking.md](diagrams/sequence-create-booking.md) |
+| `PUT /api/v1/bookings/{id}` | [diagrams/sequence-update-booking.md](diagrams/sequence-update-booking.md) |
+| `PATCH /api/v1/bookings/{id}/status` | [diagrams/sequence-update-status.md](diagrams/sequence-update-status.md) |

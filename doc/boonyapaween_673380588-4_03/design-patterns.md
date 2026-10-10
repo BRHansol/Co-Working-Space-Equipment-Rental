@@ -53,8 +53,21 @@
 | abstract class แทน default method | ต้องมีคลาสเพิ่มโดยไม่จำเป็น และ state จะ extend คลาสอื่นไม่ได้อีก |
 | เก็บ state object ลง DB | ต้องแปลงไปมา ใช้ enum เป็นค่าจริงแล้วสร้าง state ตอนใช้ง่ายและปลอดภัยกว่า |
 
-## Diagram
+## Class Diagram
+
+![Class Diagram: State Pattern](diagrams/png/class-state.png)
+
+## State Diagram
+
+![State Diagram: วงจรสถานะการจอง](diagrams/png/state-booking.png)
+
+ตาราง transition ครบ 20 คู่ดูที่ [diagrams/state-booking.md](diagrams/state-booking.md)
+
+## Diagram ที่เกี่ยวข้อง
 
 - [diagrams/class-state.md](diagrams/class-state.md) Class Diagram ของ State Pattern
+- [diagrams/class-booking-core.md](diagrams/class-booking-core.md) Class Diagram ของ Booking Core แยกตาม Layer (Enterprise Pattern)
 - [diagrams/state-booking.md](diagrams/state-booking.md) State Diagram และตาราง transition ครบ 20 คู่
-- [diagrams/sequence-update-status.md](diagrams/sequence-update-status.md) Sequence ของการเปลี่ยนสถานะ
+- [diagrams/sequence-create-booking.md](diagrams/sequence-create-booking.md) Strategy และ State ทำงานร่วมกันตอนสร้างการจอง
+- [diagrams/sequence-update-booking.md](diagrams/sequence-update-booking.md) `isEditable()` ตอนแก้ไขการจอง
+- [diagrams/sequence-update-status.md](diagrams/sequence-update-status.md) การเปลี่ยนสถานะสำเร็จ และได้ 409
