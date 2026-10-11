@@ -4,34 +4,20 @@
 
 ภาพแสดงการตรวจการจองและเชื่อมอุปกรณ์ที่ถูกเรียกจาก Booking Core ผู้ใช้เรียกสร้าง/แก้ไข Booking ส่วน validation และการผูกอุปกรณ์เป็นขั้นตอนภายใน Service
 
-```mermaid
-flowchart LR
-    User["«actor»<br/>ผู้ทำรายการ"]
-    Staff["«actor»<br/>STAFF / ADMIN"]
-    subgraph System["ระบบจองห้องและอุปกรณ์ — ขอบเขตที่เกี่ยวข้องกับคนที่ 4"]
-        Create(["UC-01 สร้างการจองพร้อมรายการอุปกรณ์"])
-        Update(["UC-02 แก้ไขการจองและรายการอุปกรณ์"])
-        Validate(["UC-03 ตรวจเงื่อนไขการจอง"])
-        Link(["UC-04 ผูก/แทนรายการอุปกรณ์"])
-        ForOther(["UC-05 จองแทนผู้ใช้อื่น"])
-    end
-    User --- Create
-    User --- Update
-    Staff --- Create
-    Staff --- Update
-    Staff --- ForOther
-    Create -.->|"«include»"| Validate
-    Update -.->|"«include»"| Validate
-    Create -.->|"«include»"| Link
-    Update -.->|"«include»"| Link
-    ForOther -.->|"«extend» เมื่อ bookingForUserId เป็นผู้อื่น"| Create
-    classDef member4 fill:#e0f2fe,stroke:#0369a1,color:#0f172a
-    class Validate,Link member4
-```
+![UML Use Case Diagram: Actor รูปคนและกรณีใช้งานการจองที่เกี่ยวข้องกับคนที่ 4](png/01-use-cases.png)
 
-Mermaid ใช้ flowchart แสดงความสัมพันธ์ Use Case สำหรับดูใน Markdown ส่วน [01-use-cases.puml](01-use-cases.puml) เป็นต้นฉบับ UML Use Case โดยตรง สีฟ้าแสดงขั้นตอนหลักของคนที่ 4; UC-01/02 เป็นบริการของ Booking Core ที่เรียกขั้นตอนเหล่านี้
+ภาพสร้างจาก [01-use-cases.puml](01-use-cases.puml) ซึ่งใช้ UML Actor รูปคน, Use Case วงรี และกรอบขอบเขตระบบ สีฟ้าแสดงขั้นตอนหลักของคนที่ 4; UC-01/02 เป็นบริการของ Booking Core ที่เรียกขั้นตอนเหล่านี้
 
-## UC-01 — สร้างการจองพร้อมรายการอุปกรณ์
+ความสัมพันธ์ในภาพ:
+
+- เส้นทึบไม่มีหัวลูกศรระหว่าง Actor กับ Use Case แสดงการมีส่วนร่วม ไม่ใช่ลำดับการทำงาน
+- `STAFF / ADMIN` เป็นบทบาทเฉพาะของ `ผู้ทำรายการ` เส้น generalization มีหัวสามเหลี่ยมโปร่งชี้ไปยังบทบาททั่วไป จึงใช้ UC-01/02 ได้โดยไม่ต้องวาดเส้นซ้ำ
+- `«include»` ชี้จาก UC-01/02 ไปยัง UC-03/04 ซึ่งถูกเรียกทุกครั้ง การจัดการรายการอุปกรณ์รวมกรณีรายการว่างด้วย จึงไม่ได้บังคับว่าต้องเลือกอุปกรณ์
+- `«extend»` ชี้จาก UC-05 ไปยัง UC-01 เฉพาะเมื่อ `bookingForUserId` ไม่เป็น `null` และต่างจาก requester โดยผู้ทำรายการต้องเป็น STAFF / ADMIN
+
+Actor `ผู้ทำรายการ` หมายถึงบทบาททั่วไปที่ครอบคลุม USER, STAFF และ ADMIN ไม่ได้หมายถึงเฉพาะเจ้าของ Booking หรือยืนยันว่ามีการตรวจเจ้าของก่อนแก้ไข
+
+## UC-01 — สร้างการจอง
 
 | รายการ | รายละเอียด |
 | --- | --- |
@@ -87,9 +73,9 @@ Mermaid ใช้ flowchart แสดงความสัมพันธ์ Use
 
 ผลสำเร็จคือ context มีห้องและ map จำนวนอุปกรณ์ที่ตรวจแล้ว หากไม่ผ่านจะหยุด Chain และส่ง exception กลับ HTTP API ใช้ ErrorResponse ของคนที่ 5: 400 สำหรับข้อมูลไม่ถูกต้อง, 403 สำหรับสิทธิ์, 404 สำหรับ resource ไม่มี, 409 สำหรับห้องหรืออุปกรณ์ไม่พร้อม
 
-## UC-04 — ผูก/แทนรายการอุปกรณ์
+## UC-04 — จัดการรายการอุปกรณ์ของการจอง
 
-เงื่อนไขก่อนเริ่ม: UC-03 ผ่าน และมี Booking entity ที่จะบันทึก Service ใช้ map ใน context ซึ่งรวมจำนวนซ้ำแล้ว สร้าง `BookingEquipment(booking, equipment, quantity)` ต่อหนึ่ง equipmentId และเพิ่มลง collection ของ Booking
+เงื่อนไขก่อนเริ่ม: UC-03 ผ่าน และมี Booking entity ที่จะบันทึก Service ใช้ map ใน context ซึ่งรวมจำนวนซ้ำแล้ว สร้าง `BookingEquipment(booking, equipment, quantity)` ต่อหนึ่ง equipmentId และเพิ่มลง collection ของ Booking หากสร้างการจองโดยไม่เลือกอุปกรณ์ ขั้นตอนนี้ประมวลผลรายการว่างและไม่สร้าง join row
 
 การแก้ไขใช้ `clear()` กับ `orphanRemoval = true` เพื่อลบแถวเดิม และ `cascade = ALL` เพื่อบันทึกแถวใหม่ การล้างและบันทึกเป็นหน้าที่ Service ของคนที่ 3 ส่วน join entity และข้อมูลจำนวนที่ตรวจแล้วเป็นงานคนที่ 4
 

@@ -1,36 +1,49 @@
 @startuml
-title Use Cases — Booking Validation & Equipment Linking (Member 4)
+title Use Case Diagram\nBooking Validation & Equipment Linking (คนที่ 4)
 left to right direction
 skinparam shadowing false
 skinparam packageStyle rectangle
+skinparam backgroundColor white
+skinparam defaultFontName Tahoma
+skinparam defaultFontSize 16
+skinparam titleFontSize 22
+skinparam dpi 150
+skinparam ArrowColor #526475
+skinparam ActorBorderColor #153049
+skinparam ActorFontColor #153049
+skinparam UsecaseBorderColor #153049
+skinparam UsecaseBackgroundColor #F8FAFC
+skinparam UsecaseFontColor #153049
+skinparam RectangleBorderColor #526475
+skinparam RectangleBackgroundColor white
+skinparam NoteBackgroundColor #FFF9E8
+skinparam NoteBorderColor #C8B67D
+skinparam NoteFontSize 14
 actor "ผู้ทำรายการ" as Requester
 actor "STAFF / ADMIN" as Staff
 
-rectangle "ระบบจองห้องและอุปกรณ์ — ขอบเขตที่เกี่ยวข้องกับคนที่ 4" {
-  usecase "UC-01\nสร้างการจองพร้อมรายการอุปกรณ์" as Create
-  usecase "UC-02\nแก้ไขการจองและรายการอุปกรณ์" as Update
+rectangle "ระบบจองห้องและอุปกรณ์\nขอบเขตที่เกี่ยวข้องกับคนที่ 4" {
+  usecase "UC-01\nสร้างการจอง" as Create
+  usecase "UC-02\nแก้ไขการจอง\nและรายการอุปกรณ์" as Update
   usecase "UC-03\nตรวจเงื่อนไขการจอง" as Validate #E0F2FE
-  usecase "UC-04\nผูก/แทนรายการอุปกรณ์" as Link #E0F2FE
+  usecase "UC-04\nจัดการรายการอุปกรณ์\nของการจอง" as Link #E0F2FE
   usecase "UC-05\nจองแทนผู้ใช้อื่น" as ForOther
 }
 
 Requester -- Create
 Requester -- Update
-Staff -- Create
-Staff -- Update
+Staff -up-|> Requester
 Staff -- ForOther
 Create ..> Validate : <<include>>
 Update ..> Validate : <<include>>
 Create ..> Link : <<include>>
 Update ..> Link : <<include>>
-ForOther ..> Create : <<extend>>\nbookingForUserId เป็นผู้ใช้อื่น
+ForOther ..> Create : <<extend>>\n[จองแทนผู้อื่น]
 
-note bottom of Validate
-  Member 4: ordered validation chain
-  permission -> room -> time overlap -> equipment
-end note
-note bottom of Link
-  Member 4: BookingEquipment + validated quantities
-  BookingService integration belongs to Member 3
-end note
+legend bottom left
+  สีฟ้า: ขั้นตอนงานของคนที่ 4
+  ผู้ทำรายการ: บทบาททั่วไปของผู้ใช้ระบบ
+  STAFF / ADMIN: ทำรายการทั่วไปและจองแทนผู้อื่นได้
+  UC-04 รวมการประมวลผลรายการว่าง ไม่บังคับเลือกอุปกรณ์
+endlegend
 @enduml
